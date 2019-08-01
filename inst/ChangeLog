@@ -1,0 +1,157 @@
+12/08/2017: v0.5.13
+
+  o Added the diagnostic spider plot for logR-logOR summary of segments.
+  o function readSnpMatrixDT to read the pileup count file using
+      data.table package added to extRfns directory (Thx Dario Beraldi).
+
+10/18/2017: v0.5.12
+
+  o documentation to explain the need to set the seed and NA in cncf.
+
+03/31/2017: v0.5.11
+
+  o added vertical lines to indicate chromosome boundaries
+
+03/28/2017: v0.5.10
+
+  o fixed a bug in plotSample. EM fit doesn't have naive tcn, lcn and cf.
+
+03/24/2017: v0.5.9
+
+  o added stomach example to tests for code coverage
+
+03/23/2017: v0.5.8
+
+  o nhet threshold checks in emcncf and emcncf2
+
+03/21/2017: v0.5.7
+
+  o added details of the columns of the segment summary data frame
+
+11/11/2016: v0.5.6
+
+  o fixed bug in readSnpMatrix which removed all loci with any del or
+    err read. New default is to keep all.
+  o fixed bug in cbs2rank.f code that was greedy in search for max T.
+  o changes cbs2rank.f code and R functions (segsnps etc. that call it)
+    to specify delta - min change in E(logR).
+  o preProcSample has a new option delta now to implement
+  o readSnpMatrix can read the old perl pileup files now
+  o fixed integer overflow bug in fit.cpt.tree (11/18/2016)
+
+10/28/2016: v0.5.5
+
+  o fixed bugs in emcncf and emcncf2 (affected cases with no CNA)
+
+10/18/2016: v0.5.4
+
+  o added colClasses to read.csv in readSnpMatrix (Henrik's comment)
+  o changed stomach.csv.gz to have Ref & Alt columns (all "N")
+
+09/22/2016: v0.5.3
+
+  o added hg38 as a genome build option (needs pctGCdata >= 0.2.0)
+  o changed the code to allow for chromosomes with no snps
+
+08/10/2016: v0.5.2
+
+  o fixed the bug in counts2logROR that did not pass gbuild
+  o included snp-pileup code in inst/extcode directory. This
+    can be compiled (needs htslib) to create a stand-alone
+    read counts snpmatrix file.
+
+06/15/2016: v0.5.1
+
+  o added ndepthmax to allow for high coverage samples
+  o fixed ChrX=23 coding in cncf & emcncf to handle mouse (chrX=20)
+
+06/03/2016: v0.5.0
+
+  o this is a major revision with changes to the interface.
+  o versions through 0.3.30 were released with bug fixes
+  o reading of count matrix is done in a separate function
+  o plotSample is versatile and plotSampleCNCF removed
+
+01/11/2016: v0.3.20
+
+  o findDiploidLogR fixed to account for 2+2 states at 2 cnlr levels
+
+01/08/2016: v0.3.19
+
+  o some adjustments to cncf so that max fitted cf is 99%
+
+01/08/2016: v0.3.18
+
+  o fixes to emcncf when estimated naive cf is small
+
+01/08/2016: v0.3.17
+
+  o segments should have 1% of hest for mafR clustering
+  o check for since chrX in cncf
+
+01/07/2016: v0.3.16
+
+  o trimmed fit for emcncf
+
+01/07/2016: v0.3.15
+
+  o add chr X check
+
+01/07/2016: v0.3.14
+
+  o further refinement of emcncf
+
+12/22/2015: v0.3.13
+
+  o refinement of emcncf; update plotSampleCNCF.Rd
+
+12/09/2015: v0.3.12
+
+  o purity optimization edit
+
+12/03/2015: v0.3.11
+
+  o purity optimization take2; update DESCRIPTION
+
+12/02/2015: v0.3.10
+
+  o fixed purity optimization
+
+11/17/2015: v0.3.9
+
+  o Bug in winsorized mafR code (median(abs(valor)) instead median(valor))
+
+09/09/2015: v0.3.8
+
+  o Modified balanced seg selection restrict to  mafR < 0.1
+  o Winsorize maf calculation to dampen extreme valor values.
+  o Added unmatched normal code.
+
+08/14/2015: v0.3.7
+
+  o Fixed negative copy numbers in emcncf
+
+08/04/2015: v0.3.6
+
+  o Added dipLogR argument to procSample to help reprocess with lower cval.
+
+07/30/2015: v0.3.5
+
+  o Changed fitcncf to use more stringent deviation measure.
+
+07/24/2015: v0.3.4
+
+  o Fixed bugs in emcncf (Ronglai)
+
+07/24/2015: v0.3.3
+
+  o default min.nhet set to 15. changes to findDiploidLogR and clustersegs.
+
+07/22/2015: v0.3.2
+
+  o Fixed bugs in emcncf (Ronglai)
+
+07/21/2015: v0.3.1
+
+  o Added checks to findDiploidLogR, segsnps and fit.cpt.tree. Fixed
+	emcncf bug. Set default cval to be 50 in procSample.

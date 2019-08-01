@@ -1,0 +1,15 @@
+Package: facets2n
+Type: Package
+Title: Cellular Fraction and Copy Numbers from Tumor Sequencing
+Version: 0.0.2
+Date: 2018-01-30
+Author: Venkatraman E. Seshan and Ronglai Shen
+Maintainer: Venkatraman E. Seshan <seshanv@mskcc.org>
+Description: Algorithm to implement Fraction and Allelic Copy number
+             Estimate from Tumor/normal Sequencing. Package created
+             to test FACETS with both matched and unmatched normal.
+License: GPL (>= 2)
+Depends: R (>= 3.4.0), pctGCdata (>= 0.2.0)
+Remotes: veseshan/pctGCdata
+NeedsCompilation: yes
+Packaged: 2018-01-30 14:47:09 UTC; seshanv
