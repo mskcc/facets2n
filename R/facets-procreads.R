@@ -1,5 +1,5 @@
 # heterozygous and keep flags of the SNPs
-procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=1000) {
+procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000) {
     # keep only chromsomes 1-22 & X for humans and 1-19, X for mice
     if (gbuild %in% c("hg19", "hg38", "hg18")) {
         chromlevels <- c(1:22,"X")
@@ -48,20 +48,27 @@ scanSnp <- function(maploc, het, nbhd) {
 }
 
 # obtain logR and logOR from read counts and GC-correct logR
-counts2logROR <- function(mat, gbuild, unmatched=FALSE, f=0.2) {
+counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, spanT, spanA, spanX) {
     out <- mat[mat$keep==1,]
+    #out$chrom = gsub('X', '23', out$chrom) #testing replace X with 23
+
     # gc percentage
     out$gcpct <- rep(NA_real_, nrow(out))
     # get GC percentages from pctGCdata package
     # loop thru chromosomes
-    nchr <- max(mat$chrom) # IMPACT doesn't have X so only 22
-    for (i in 1:nchr) {
+    #nchr <- max(mat$chrom) # IMPACT doesn't have X so only 22
+
+    for (i in c(1:23)) {
+   # for (i in 1:nchr) {
         ii <- which(out$chrom==i)
         # allow for chromosomes with no SNPs i.e. not targeted
         if (length(ii) > 0) {
             out$gcpct[ii] <- getGCpct(i, out$maploc[ii], gbuild)
         }
+
     }
+    out = out[which(!is.na(out$gcpct)),]
+    x.idx <- grep("X|23",out$chrom)
     ##### log-ratio with gc correction and maf log-odds ratio steps
     chrom <- out$chrom
     maploc <- out$maploc
@@ -75,6 +82,9 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, f=0.2) {
     vafN <- out$vafN
     het <- out$het
     gcpct <- out$gcpct
+    gcpct.auto = gcpct[-x.idx]
+    gcpct.x = gcpct[x.idx]
+
     # compute gc bias
     ncount <- tapply(rCountN, gcpct, sum)
     tcount <- tapply(rCountT, gcpct, sum)
@@ -84,7 +94,53 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, f=0.2) {
     jj <- match(gcpct, gcb$x)
     gcbias <- gcb$y[jj]
     # compute cn log-ratio (gc corrected) and baf log odds-ratio
-    cnlr <- log2(1+rCountT*tscl) - log2(1+rCountN) - gcbias
+    #####################################
+    #square root transform count vectors.
+    tumor_sqrt = sqrt(rCountT)
+    tumor_sqrt.auto = tumor_sqrt[-x.idx]
+    tumor_sqrt.x    = tumor_sqrt[x.idx]
+
+    normal_sqrt      = sqrt(rCountN)
+    normal_sqrt.auto = normal_sqrt[-x.idx]
+    normal_sqrt.x    = normal_sqrt[x.idx]
+
+    #loess regression for lr tumor autosomes and X seperately.
+    loess_tumor.auto = lowess(gcpct.auto,tumor_sqrt.auto, f=spanT) #need to change this to input value from span.fits
+    jj=match(gcpct.auto, loess_tumor.auto$x)
+    fit<-loess_tumor.auto$y[jj]
+    #loess_tumor.auto <-loess(tumor_sqrt.auto~gcpct.auto,span=f);
+   # temp<-predict(loess_tumor.auto);
+    normalized_t.auto<-(tumor_sqrt.auto-fit+median(tumor_sqrt.auto))/(median(tumor_sqrt.auto[which(tumor_sqrt.auto != 0)]));
+
+    loess_tumor.x <-lowess(gcpct.x,tumor_sqrt.x,f=spanT);
+    jj=match(gcpct.x, loess_tumor.x$x)
+    fit<-loess_tumor.x$y[jj]
+    #temp<-predict(loess_tumor.x);
+    normalized_t.x<-(tumor_sqrt.x-fit+median(tumor_sqrt.x))/(median(tumor_sqrt.x[which(tumor_sqrt.x != 0)]));
+
+    tumor_rt = c(normalized_t.auto, normalized_t.x)
+
+    #loess regression for lr normal autosomes and X seperately.
+    loess_normal.auto <-lowess(gcpct.auto, normal_sqrt.auto,f=spanA);
+   # temp<-predict(loess_normal.auto);
+    jj=match(gcpct.auto, loess_normal.auto$x)
+    fit<-loess_normal.auto$y[jj]
+    normalized_n.auto<-(normal_sqrt.auto-fit+median(normal_sqrt.auto))/(median(normal_sqrt.auto[which(normal_sqrt.auto != 0)]));
+
+    loess_normal.x <-lowess(gcpct.x,normal_sqrt.x,f=spanX);
+    jj=match(gcpct.x, loess_normal.x$x)
+    fit<-loess_normal.x$y[jj]
+    #temp<-predict(loess_normal.x);
+    normalized_n.x<-(normal_sqrt.x-fit+median(normal_sqrt.x))/(median(normal_sqrt.x[which(normal_sqrt.x != 0)]));
+
+    normal_rt = c(normalized_n.auto, normalized_n.x)
+
+    #calculate log2 ratios
+    cnlr = log2(tumor_rt) - log2(normal_rt)
+
+    #####################################
+    #use old method of cnlr calc if matched normal
+    if (!MandUnormal) cnlr <- log2(1+rCountT*tscl) - log2(1+rCountN) - gcbias
     # minor allele log-odds ratio and weights
     rCountN <- out$rCountN # reset normal depth in case umNrCount exists
     lorvar <- valor <- rep(NA_real_, length(maploc))
