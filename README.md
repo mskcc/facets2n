@@ -55,9 +55,6 @@ png(filename = "tests/P-0029502_matched_CNLR.png",width = 4, height = 6, units =
 plotSample(x=oo,emfit=fit, plot.type = "both")
 dev.off()
 ```
-Results using matched normal for CNLR:
-
-![matched normal cnlr](/tests/P-0029502_matched_CNLR.png)
 
 ## Run FACETS with unmatched normal samples for CNLR
 *The runtime of readSnpMatrix() increases with number of unmatched normal samples*
@@ -77,6 +74,7 @@ png(filename = "tests/P-0029502_unmatched_CNLR.png",width = 4, height = 6, units
 plotSample(x=oo,emfit=fit, plot.type = "both")
 dev.off()
 ```
-Results using unmatched normal that minimizes noise:
 
-![unmatched normal cnlr](/tests/P-0029502_unmatched_CNLR.png)
+Results using matched normal for CNLR                     |  Results using unmatched normal for CNLR
+:--------------------------------------------------------:|:------------------------------------------------------------:
+![matched normal cnlr](/tests/P-0029502_matched_CNLR.png) | ![unmatched normal cnlr](/tests/P-0029502_unmatched_CNLR.png)
