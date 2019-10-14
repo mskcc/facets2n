@@ -97,8 +97,9 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf, per
 
       unorms.dp.lowess <- do.call('cbind',lapply(seq(1,ncol(unorms.dp)-4,1),function(i){
       column_sqrt<-sqrt(unorms.dp[,i]);
-      #gc.bias <- unorms.dp$gcpct
-      loess.obj <-lowess(gc.bias, column_sqrt,f=span.fits[i,'min']);
+      # span.fits includes the span value for tumor sample as the first element.
+      #  so offset index by +1 when retrieving span values for normals.
+      loess.obj <-lowess(gc.bias, column_sqrt,f=span.fits[i+1,'min']);
       jj=match(unorms.dp$gcpct, loess.obj$x)
       fit<-loess.obj$y[jj]
       normalized<-(column_sqrt-fit+median(column_sqrt))/(median(column_sqrt[which(column_sqrt != 0)]));
