@@ -42,7 +42,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf, per
       tempA =paste("File", i, "A", sep="")
       unorms[,temp] = unorms[,tempR] + unorms[,tempA]
       }
-      unorms[,"NOR.DP"]= pileup$NOR.DP  ###testing adding match norm here
+      unorms[,"NOR.DP"]= rcmat$NOR.DP  ###include matched normal here
       unorms.dp = unorms[,grep("DP", colnames(unorms))]
       unorms.dp$medianDP= apply(unorms.dp, 1, median, na.rm=T)
       unorms.dp$q25= apply(subset(unorms.dp, select = -medianDP), 1, quantile, probs=0.25, na.rm=T)
