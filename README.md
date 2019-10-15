@@ -3,12 +3,6 @@ Algorithm to implement Fraction and Allelic Copy number Estimate from Tumor/norm
 
 This implementation of FACETS requires a tumor sample, matched normal and user defined number of unmatched normal samples. 
 
-- [x] The normal sample with computed minimal noise is selected for copy number log2 ratio calculations, while the matched normal is always selected for VALOR calculation. 
-
-*At present, autosomes and chromosome X are normalized separately.*
-
-- [ ] Planned: infer sex from matched normal sample, and select an unmatched normal with same sex for chrX normalization.
-
 ## Install R library
 
 ```
@@ -58,6 +52,11 @@ dev.off()
 
 ## Run FACETS with unmatched normal samples for CNLR
 *The runtime of readSnpMatrix() increases with number of unmatched normal samples*
+
+By default when using unmatched normal(s), patient biological sex is determined from number of chrX het SNPs and only unmatched normals of the same sex are used for chrX cnlr normalization.
+
+To force the use of matched normal for chrX cnlr normalization set  useMatchedX=TRUE in call to readSnpMatrix()
+
 ```
 library(facets2n)
 readu = readSnpMatrix(filename = "tests/countsMerged_uNormals_P-0029502.dat.gz",MandUnormal = TRUE)
