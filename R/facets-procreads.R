@@ -36,6 +36,48 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     as.data.frame(out)
 }
 
+#determine sex of sample and unmatched normals based on number of chrX het SNPs
+#males should not have het X
+procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
+    
+    chromlevels = "X"
+    chr.keep <- unorms$Chromosome %in% chromlevels
+    # keep only snps with normal read depth between ndepth and 1000
+    depthN.keep <- (unorms$NOR.DP >= ndepth) & (unorms$NOR.DP < ndepthmax)
+    # reduce the data frame to these snps
+    rcmatX <- unorms[chr.keep & depthN.keep,]
+    # output data frame
+    out <- list()
+    out$chrom <- rcmatX$Chromosome
+    out$maploc <- rcmatX$Position
+    
+    
+    out$rCountT <- rcmatX$TUM.DP
+    out$rCountN <- rcmatX$NOR.DP
+    out$vafT <- 1 - rcmatX$TUM.RD/rcmatX$TUM.DP
+    out$vafN <- 1 - rcmatX$NOR.RD/rcmatX$NOR.DP
+    out = as.data.frame(out)
+    
+    for(i in 3:(normCount+2)){
+        tempVAF = paste('File', i, "VAF", sep="")
+        tempR = paste("File", i, "R", sep="")
+        tempDP = paste("File", i, "DP", sep="")
+        tempHET = paste("File", i, "DPhet", sep="")
+        out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
+        out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+    }
+    out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
+    
+    out.hets = out[,grep("het", colnames(out))]
+    
+    out.hets = as.data.frame(colSums(out.hets, na.rm = T))
+    colnames(out.hets) = "numHet"  
+    out.hets$sampleSex = ifelse(out.hets$numHet>nhet,"Female", "Male") 
+    rownames(out.hets) = gsub("het", "", rownames(out.hets))
+    
+    out.hets
+}
+
 scanSnp <- function(maploc, het, nbhd) {
     n <- length(maploc)
     zzz <- .Fortran("scansnp",
