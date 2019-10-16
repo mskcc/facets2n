@@ -38,7 +38,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
 
 #determine sex of sample and unmatched normals based on number of chrX het SNPs
 #males should not have het X
-procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
+procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10, normCount=NULL) {
     
     chromlevels = "X"
     chr.keep <- unorms$Chromosome %in% chromlevels

@@ -137,7 +137,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf, per
       })));
 
       #determine sex of sample and unmatched nornmals
-      snpsX = procXSnps(unorms, nhet=10)
+      snpsX = procXSnps(unorms, nhet=10, normCount = normCount)
       sampleSex = snpsX["NOR.DP", "sampleSex"]
       
       #limit normals for X normalization to those matching patient sex
