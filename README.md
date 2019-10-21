@@ -63,9 +63,9 @@ library(facets2n)
 
 # There are two ways to run the unmatched analyis. The reference normal loess data can be generated independently and used for subsequent analysis as shown below. This will substantially decrease analysis time if you will be using the same set of unmatched normals for multiple analyses.
 
-MakeLoessObject(PreProcSnpPileup("./tests/countsMerged_uNormals.dat.gz", is.TandMN = FALSE), write.loess = TRUE, outfilepath = "./tests/countsMerged_uNormals.loess.txt", is.TandMN = FALSE)
+MakeLoessObject(pileup = PreProcSnpPileup(filename = "./tests/countsMerged_uNormals.dat.gz", is.TandMN = FALSE), write.loess = TRUE, outfilepath = "./tests/countsMerged_uNormals.loess.txt", is.TandMN = FALSE)
 
-readu <- readSnpMatrix("./tests/countsMerged_MatchedNormalandTumor_P-0029502.dat.gz", MandUnormal = TRUE, ReferencePileupFile = "./tests/countsMerged_uNormals.dat.gz", ReferenceLoessFile = "./countsMerged_uNormals.loess.txt", matchedNormalforX = FALSE)
+readu <- readSnpMatrix(filename = "./tests/countsMerged_MatchedNormalandTumor_P-0029502.dat.gz", MandUnormal = TRUE, ReferencePileupFile = "./tests/countsMerged_uNormals.dat.gz", ReferenceLoessFile = "./tests/countsMerged_uNormals.loess.txt", matchedNormalforX = FALSE)
 
 # Alternatively, the tumor, normal, and reference unmatched normals pileup data can all be provided in a single file for one-time analysis.
 
