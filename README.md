@@ -67,7 +67,7 @@ MakeLoessObject(PreProcSnpPileup("./tests/countsMerged_uNormals.dat.gz", is.Tand
 
 readu <- readSnpMatrix("./tests/countsMerged_MatchedNormalandTumor_P-0029502.dat.gz", MandUnormal = TRUE, ReferencePileupFile = "./tests/countsMerged_uNormals.dat.gz", ReferenceLoessFile = "./countsMerged_uNormals.loess.txt", matchedNormalforX = FALSE)
 
-# Alternatively, the tumor, normal, and reference unmatched normals pileuo data can all be provided in a single file for one-time analysis.
+# Alternatively, the tumor, normal, and reference unmatched normals pileup data can all be provided in a single file for one-time analysis.
 
 readu = readSnpMatrix(filename = "./tests/countsMerged_uNormals_P-0029502.dat.gz", MandUnormal = TRUE, matchedNormalforX = FALSE)
 
