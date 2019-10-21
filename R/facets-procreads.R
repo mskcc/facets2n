@@ -286,7 +286,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   })));
   
   #pick the normals that minimize noise
-  best_normAuto <- colnames(noiseAuto)[which(noiseAuto == min(noiseAuto))][1]
+  best_normAuto <- colnames(noiseAuto)[which(noiseAuto == min(noiseAuto) & noiseAuto != 0)][1]
   
   if(matchedNormalforX) {
     best_normX <- MatchedNormalIdentifier
@@ -298,7 +298,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
       return(sum(lr^2, na.rm=T));
     })));
     
-    best_normX <- colnames(noiseX)[which(noiseX == min(noiseX))][1]
+    best_normX <- colnames(noiseX)[which(noiseX == min(noiseX) & noiseAuto != 0)][1]
   }
   
   message(sprintf("Best normal for autosomes: %s\nBest normal for ChrX: %s\n", 
