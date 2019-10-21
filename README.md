@@ -60,7 +60,18 @@ dev.off()
 *The runtime of readSnpMatrix() increases with number of unmatched normal samples*
 ```
 library(facets2n)
-readu = readSnpMatrix(filename = "tests/countsMerged_uNormals_P-0029502.dat.gz",MandUnormal = TRUE)
+
+# There are two ways to run the unmatched analyis. The reference normal loess data can be generated independently and used for subsequent analysis as shown below. This will substantially decrease analysis time if you will be using the same set of unmatched normals for multiple analyses.
+
+MakeLoessObject(PreProcSnpPileup("./tests/countsMerged_uNormals.dat.gz", is.TandMN = FALSE), write.loess = TRUE, outfilepath = "./tests/countsMerged_uNormals.loess.txt", is.TandMN = FALSE)
+
+readu <- readSnpMatrix("./tests/countsMerged_MatchedNormalandTumor_P-0029502.dat.gz", MandUnormal = TRUE, ReferencePileupFile = "./tests/countsMerged_uNormals.dat.gz", ReferenceLoessFile = "./countsMerged_uNormals.loess.txt", matchedNormalforX = FALSE)
+
+# Alternatively, the tumor, normal, and reference unmatched normals pileuo data can all be provided in a single file for one-time analysis.
+
+readu = readSnpMatrix(filename = "./tests/countsMerged_uNormals_P-0029502.dat.gz", MandUnormal = TRUE, matchedNormalforX = FALSE)
+
+# The following steps are applicable to either of approaches above.
 
 xx = preProcSample(readu$rcmat, unmatched = F,ndepth = 10,het.thresh = 0.25,ndepthmax = 5000,spanT = readu$spanT, spanA=readu$spanA, spanX = readu$spanX, MandUnormal = TRUE)
 oo=procSample(xx,min.nhet = 10, cval = 150)
