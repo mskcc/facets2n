@@ -39,7 +39,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
 #determine sex of sample and unmatched normals based on number of chrX het SNPs
 #males should not have het X
 procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10, normCount=NULL) {
-    
+
     chromlevels = "X"
     chr.keep <- unorms$Chromosome %in% chromlevels
     # keep only snps with normal read depth between ndepth and 1000
@@ -50,14 +50,14 @@ procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     out <- list()
     out$chrom <- rcmatX$Chromosome
     out$maploc <- rcmatX$Position
-    
-    
+
+
     out$rCountT <- rcmatX$TUM.DP
     out$rCountN <- rcmatX$NOR.DP
     out$vafT <- 1 - rcmatX$TUM.RD/rcmatX$TUM.DP
     out$vafN <- 1 - rcmatX$NOR.RD/rcmatX$NOR.DP
     out = as.data.frame(out)
-    
+
     for(i in 3:(normCount+2)){
         tempVAF = paste('File', i, "VAF", sep="")
         tempR = paste("File", i, "R", sep="")
@@ -67,14 +67,14 @@ procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
     }
     out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
-    
+
     out.hets = out[,grep("het", colnames(out))]
-    
+
     out.hets = as.data.frame(colSums(out.hets, na.rm = T))
-    colnames(out.hets) = "numHet"  
-    out.hets$sampleSex = ifelse(out.hets$numHet>nhet,"Female", "Male") 
+    colnames(out.hets) = "numHet"
+    out.hets$sampleSex = ifelse(out.hets$numHet>nhet,"Female", "Male")
     rownames(out.hets) = gsub("het", "", rownames(out.hets))
-    
+
     out.hets
 }
 
@@ -142,7 +142,7 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, sp
     tumor_sqrt.auto = tumor_sqrt[-x.idx]
     tumor_sqrt.x    = tumor_sqrt[x.idx]
 
-    normal_sqrt      = sqrt(rCountN)
+    normal_sqrt     = sqrt(rCountN)
     normal_sqrt.auto = normal_sqrt[-x.idx]
     normal_sqrt.x    = normal_sqrt[x.idx]
 
@@ -178,7 +178,7 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, sp
     normal_rt = c(normalized_n.auto, normalized_n.x)
 
     #calculate log2 ratios
-    cnlr = log2(tumor_rt) - log2(normal_rt)
+    cnlr = log2(0.25+tumor_rt^2) - log2(0.25+normal_rt^2) #square to fix overcorrection of logR magnitude
 
     #####################################
     #use old method of cnlr calc if matched normal
