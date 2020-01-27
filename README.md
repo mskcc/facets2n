@@ -28,7 +28,7 @@ R/snp-pileup-wrapper.R \
 
 ## Example generation of the input counts file using snp-pileup (required) and 18 assay specific unmatched diploid normals and 1 batch Pooled Normal:
 ```
-R/snp-pileup-wrapper.R --vcf dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf --normal-bam P-0030397-NN.bam --tumor-bam P-0029502-TH.bam --output-prefix countsMerged_P-0029502-TH_P-0029502-NN --unmatched_normal_BAMS "/dmp/data/mskdata/heme/production/*-N_*bam /dmp/data/mskdata/heme/production/*-NS_*bam PoolNormal*bam"
+R/snp-pileup-wrapper.R --vcf dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf --normal-bam P-0030397-NN.bam --tumor-bam P-0029502-TH.bam --output-prefix countsMerged_uNormals_P-0029502 --unmatched_normal_BAMS "/dmp/data/mskdata/heme/production/*-N_*bam /dmp/data/mskdata/heme/production/*-NS_*bam PoolNormal*bam"
 ```
 
 
