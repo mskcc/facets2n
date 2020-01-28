@@ -18,7 +18,7 @@ devtools::install_github("rptashkin/facets2n")
 ## snp-pileup command options used for IMPACT data (hat tip kpjonsson for wrapper, see: mskcc/facets-suite):
 ```
 R/snp-pileup-wrapper.R \
-  --snp-pileup-path <path to snp-pileup executable> \
+  --snp-pileup-path <optional, path to snp-pileup executable, defaults to snp-pileup in your PATH> \
   --vcf-file <path to SNP VCF> \
   --normal-bam normal.bam \
   --tumor-bam tumor.bam \
