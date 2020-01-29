@@ -36,6 +36,48 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     as.data.frame(out)
 }
 
+#determine sex of sample and unmatched normals based on number of chrX het SNPs
+#males should not have het X
+procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10, normCount=NULL) {
+    
+    chromlevels = "X"
+    chr.keep <- unorms$Chromosome %in% chromlevels
+    # keep only snps with normal read depth between ndepth and 1000
+    depthN.keep <- (unorms$NOR.DP >= ndepth) & (unorms$NOR.DP < ndepthmax)
+    # reduce the data frame to these snps
+    rcmatX <- unorms[chr.keep & depthN.keep,]
+    # output data frame
+    out <- list()
+    out$chrom <- rcmatX$Chromosome
+    out$maploc <- rcmatX$Position
+    
+    
+    out$rCountT <- rcmatX$TUM.DP
+    out$rCountN <- rcmatX$NOR.DP
+    out$vafT <- 1 - rcmatX$TUM.RD/rcmatX$TUM.DP
+    out$vafN <- 1 - rcmatX$NOR.RD/rcmatX$NOR.DP
+    out = as.data.frame(out)
+    
+    for(i in 3:(normCount+2)){
+        tempVAF = paste('File', i, "VAF", sep="")
+        tempR = paste("File", i, "R", sep="")
+        tempDP = paste("File", i, "DP", sep="")
+        tempHET = paste("File", i, "DPhet", sep="")
+        out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
+        out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+    }
+    out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
+    
+    out.hets = out[,grep("het", colnames(out))]
+    
+    out.hets = as.data.frame(colSums(out.hets, na.rm = T))
+    colnames(out.hets) = "numHet"  
+    out.hets$sampleSex = ifelse(out.hets$numHet>nhet,"Female", "Male") 
+    rownames(out.hets) = gsub("het", "", rownames(out.hets))
+    
+    out.hets
+}
+
 scanSnp <- function(maploc, het, nbhd) {
     n <- length(maploc)
     zzz <- .Fortran("scansnp",
@@ -226,14 +268,14 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
 ###########################################################################
 FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                                      ReferenceLoess=NULL, ReferencePileup=NULL,
-                                     MinOverlap=0.90, matchedNormalforX = FALSE) {
+                                     MinOverlap=0.90, useMatchedX=FALSE) {
   #' FindBestNormalParameters takes takes a facets2n generated tumor loess object and snp-pileup generated pileup file, and optional similar files for reference normals, and returns the pileup data for the best normal for T/N CNLR.
   #' @param TumorLoess (matrix) A facets2n generated TumorLoess matrix with header and span values in the first row.
   #' @param TumorPileup (data frame) snp-pileup generated pileup data frame with sample columns that match with the TumorLoess object.
   #' @param ReferenceLoess (matrix) A ReferenceLoess matrix with a header and span values in the first row.
   #' @param ReferencePileupFile (data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
-  #' @param matchedNormalforX (logical) Force select matched normal for normalization in ChrX.
+  #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   
   TumorLoess.span <- TumorLoess[1,]
@@ -289,7 +331,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #pick the normals that minimize noise
   best_normAuto <- colnames(noiseAuto)[which(noiseAuto == min(noiseAuto) & noiseAuto != 0)][1]
   
-  if(matchedNormalforX) {
+  if(useMatchedX) {
     best_normX <- MatchedNormalIdentifier
   }
   else {
