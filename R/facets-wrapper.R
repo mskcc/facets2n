@@ -301,7 +301,7 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   segend <- segbdry[-1]
   # plot the logR data and segment medians
   yvals=jseg$cnlr[is.finite(jseg$cnlr)]
-  plot(jseg$cnlr[is.finite(jseg$cnlr)], pch=".", cex=2.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-ratio", xaxt="n", ylim=c(min(yvals,-2)-1,max(yvals,2)+1.5))
+  plot(jseg$cnlr[is.finite(jseg$cnlr)], pch=".", cex=2.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-ratio", xaxt="n", ylim=c(min(quantile(yvals,0.9)-1,-2)-0.1,max(quantile(yvals,0.9),2)+.1))
   abline(v=chrbdry, lwd=0.25)
   abline(h=median(jseg$cnlr, na.rm=TRUE), col="green2")
   abline(h = x$dipLogR, col = "magenta4")
