@@ -3,11 +3,10 @@ Algorithm to implement Fraction and Allelic Copy number Estimate from Tumor/norm
 
 This implementation of FACETS requires a tumor sample, matched normal and user defined number of unmatched normal samples. 
 
-- [x] The normal sample with computed minimal noise is selected for copy number log2 ratio calculations, while the matched normal is always selected for VALOR calculation. 
+- :sparkles: The normal sample with computed minimal noise is selected for copy number log2 ratio calculations, while the matched normal is always selected for VALOR calculation. 
+      *At present, autosomes and chromosome X are normalized separately.*
 
-*At present, autosomes and chromosome X are normalized separately.*
-
-- [x] Planned: infer sex from matched normal sample, and select an unmatched normal with same sex for chrX normalization.
+- :construction: (working beta) infer sex from matched normal sample, and select an unmatched normal with same sex for chrX normalization.
 
 ## Install R library
 
