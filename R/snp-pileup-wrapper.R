@@ -60,9 +60,9 @@ if (args$unmatched_normal_BAMS!=FALSE){
   unmatched_bam_count = length(system(paste("ls ", args$unmatched_normal_BAMS), intern=TRUE))
   if (is.null(args$normal_bam) & is.null(args$tumor_bam)) {
     message("generating counts file for ", unmatched_bam_count, " BAMs")
-    min_read_counts =gsub(", ", ",", toString(c(" --min-read-counts 10", rep("10", unmatched_bam_count))))
+    min_read_counts =gsub(", ", ",", toString(c(" --min-read-counts 10", rep("10", unmatched_bam_count-1))))
   }else{
-    min_read_counts = gsub(", ", ",", toString(c(" --min-read-counts 10,0", rep(",10", unmatched_bam_count), " ")))
+    min_read_counts = gsub(", ", ",", toString(c(" --min-read-counts 10,0", rep("10", unmatched_bam_count))))
     message("incorporating ", unmatched_bam_count, " unmatched bams into analysis")
   }
 }else{
