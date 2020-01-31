@@ -27,10 +27,10 @@ R/snp-pileup-wrapper.R \
   --unmatched_normal_BAMS <if using unmatched BAMs for logR normalization, e.g. "<some/path/>*-N.bam" >
 ```
 
-### Example generation of the input counts file for reference normals using snp-pileup.
-*We recommend at least 5 male and 5 female reference normal BAMs, that were processed in the laboratory and analysis pipeline using the same parameters of the tumor sample you are analyzing*
+### Example generation of the input counts file for Reference normals using snp-pileup. (Recommended)
+*We suggest at least 5 male and 5 female reference normal BAMs, that were processed in the laboratory and with an analysis pipeline using the same parameters of the tumor sample you are analyzing. For hybridization capture sequencing, we have found that a pooled sample of non-neoplastic tissue (e.g. blood from healthy donors) from 10 individuals captured and sequenced together with the data being analyzed often outperforms the matched normal and individual reference normals for minimizing noise in log ratio plots.*
 ```
-R/snp-pileup-wrapper.R --output-prefix standard_normal_heme_bams  \
+R/snp-pileup-wrapper.R --output-prefix standard_normals_cv3heme  \
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf \
   --unmatched-normal-BAMS "<some/path_to_bam_directory>/*-N*.bam"
 ```
@@ -38,33 +38,11 @@ R/snp-pileup-wrapper.R --output-prefix standard_normal_heme_bams  \
 ### Example generation of the input counts file for a tumor-normal pair + sequencing batch control
 *Multiple BAM files can be suppplied as a quoted, space seperated, string to --unmatched-normal-BAMS*
 ```
-R/snp-pileup-wrapper.R --output-prefix standard_normal_bams  
+R/snp-pileup-wrapper.R --output-prefix P-0029502_NN_TH_PoolNormal  
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf
   --normal-bam normal.bam
   --tumor-bam tumor.bam
   --unmatched-normal-BAMS "<some/path>/PoolNormal.bam"
-```
-
-## Run FACETS with matched normal
-```
-library(facets2n)
-readm <-  readSnpMatrix(filename = "tests/countsMerged_uNormals_P-0029502.dat.gz",MandUnormal = FALSE)
-```
-```
-xx <- preProcSample(readm, unmatched = F,ndepth = 10,het.thresh = 0.25,ndepthmax = 5000, MandUnormal = FALSE)
-oo=procSample(xx,min.nhet = 10, cval = 150)
-```
-```
-dlr <- oo$dipLogR
-```
-```
-oo <- procSample(xx,min.nhet = 10, cval = 50, dipLogR = dlr)
-fit <- emcncf(oo, min.nhet = 10)
-```
-```
-png(filename = "tests/P-0029502_matched_CNLR.png",width = 4, height = 6, units = "in",res = 500)
-plotSample(x=oo,emfit=fit, plot.type = "both")
-dev.off()
 ```
 
 ## Run FACETS with unmatched normal samples for CNLR
@@ -74,20 +52,20 @@ dev.off()
 
 ```
 library(facets2n)
-MakeLoessObject(pileup = PreProcSnpPileup(filename = "tests/standard_normal_heme_bams.snp_pileup.gz", is.TandMN = FALSE), write.loess = TRUE, outfilepath = "tests/standard_normal_heme_bams.loess.txt", is.TandMN = FALSE)
+MakeLoessObject(pileup = PreProcSnpPileup(filename = "tests/standard_normals_cv3heme.snp_pileup.gz", is.Reference = TRUE), write.loess = TRUE, outfilepath = "tests/standard_normals_cv3heme.loess.txt", is.Reference = TRUE)
 ```
 ```
-readu <- readSnpMatrix(filename = "tests/countsMerged_MatchedNormalandTumor_P-0029502.dat.gz",
+readu <- readSnpMatrix(filename = "tests/P-0029502_NN_TH_PoolNormal.snp_pileup.gz",
   MandUnormal = TRUE,
-  ReferencePileupFile = "tests/standard_normal_heme_bams.snp_pileup.gz",
-  ReferenceLoessFile = "tests/standard_normal_heme_bams.loess.txt",
+  ReferencePileupFile = "tests/standard_normals_cv3heme.snp_pileup.gz",
+  ReferenceLoessFile = "tests/standard_normals_cv3heme.loess.txt",
   useMatchedX = FALSE)
 ```
 
-#### Alternatively, the tumor, normal, and reference unmatched normals pileup data can all be provided in a single file and loess normalization for all samples will take place at run-time.
+#### Alternatively, the tumor, normal, and reference unmatched normals pileup data can all be provided in a single counts file and loess normalization for all samples will take place at run-time.
 ```
 readu <- readSnpMatrix(
-  filename = "tests/countsMerged_uNormals_P-0029502.dat.gz",
+  filename = "tests/P-0029502_NN_TH_PoolNormal.snp_pileup.gz",
   MandUnormal = TRUE,
   useMatchedX = FALSE)
 
@@ -112,6 +90,29 @@ fit <- emcncf(oo, min.nhet = 10)
 ```
 ```
 png(filename = "tests/P-0029502_unmatched_CNLR.png",width = 4, height = 6, units = "in",res = 500)
+plotSample(x=oo,emfit=fit, plot.type = "both")
+dev.off()
+```
+
+### User still has the ability to run FACETS with the matched normal, if preferred.
+see readSnpMatrix() argument  ```MandUnormal = FALSE```
+```
+library(facets2n)
+readm <-  readSnpMatrix(filename = "tests/P-0029502_NN_TH_PoolNormal.snp_pileup.gz",MandUnormal = FALSE)
+```
+```
+xx <- preProcSample(readm, unmatched = F,ndepth = 50,het.thresh = 0.25,ndepthmax = 5000, MandUnormal = FALSE)
+oo=procSample(xx,min.nhet = 10, cval = 150)
+```
+```
+dlr <- oo$dipLogR
+```
+```
+oo <- procSample(xx,min.nhet = 10, cval = 50, dipLogR = dlr)
+fit <- emcncf(oo, min.nhet = 10)
+```
+```
+png(filename = "tests/P-0029502_matched_CNLR.png",width = 4, height = 6, units = "in",res = 500)
 plotSample(x=oo,emfit=fit, plot.type = "both")
 dev.off()
 ```
