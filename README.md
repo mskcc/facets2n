@@ -6,7 +6,7 @@ This implementation of FACETS requires a tumor sample, matched normal and user 
 - :sparkles: The normal sample with computed minimal noise is selected for copy number log2 ratio calculations, while the matched normal is always selected for VALOR calculation. 
       *At present, autosomes and chromosome X are normalized separately.*
 
-- :construction: (working beta) infer sex from matched normal sample, and select an unmatched normal with same sex for chrX normalization.
+- :construction: (beta) infer sex from matched normal sample, and select an unmatched normal with same sex for chrX normalization.
 
 ## Install R library
 
