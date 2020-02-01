@@ -1,6 +1,7 @@
-# heterozygous and keep flags of the SNPs
 procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000) {
-    # keep only chromsomes 1-22 & X for humans and 1-19, X for mice
+  #' heterozygous and keep flags of the SNPs
+  #' @importFrom utils hasName
+  #process SNPs,  keep only chromsomes 1-22 & X for humans and 1-19, X for mice
     if (gbuild %in% c("hg19", "hg38", "hg18")) {
         chromlevels <- c(1:22,"X")
     } else {
@@ -36,17 +37,25 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     as.data.frame(out)
 }
 
-#determine sex of sample and unmatched normals based on number of chrX het SNPs
-#males should not have het X
-procXSnps <- function(unorms, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
-
+procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
+  #' Takes a snp-pileup file and determines sex of sample and any unmatched normals based on number of chrX het SNPs, as males should not have het X
+  #' @param pileup (character) A snp-pileup generated pileup file that has been analyzed with readSnpMatrix(). Expect columns "Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", and "TUM.RD". Can be a pileup file that has been merged with common loci of reference normals processed with PreProcSnpPileup()
+  #' @param ndepth (numeric) minimum normal sample depth to keep
+  #' @param het.thresh (numeric) vaf threshold to call a SNP heterozygous
+  #' @param snp.nbhd (logical) window size
+  #' @param gbuild (character) genome build version.
+  #' @param unmatched (logical)
+  #' @param ndepthmax (numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
+  #' @param nhet (numeric) minimum number of heterzygous SNPs to classify sample as Female
+  #' @return output a table of samples analyzed and imputed sex.
+  #' @export
 
     chromlevels = "X"
-    chr.keep <- unorms$Chromosome %in% chromlevels
+    chr.keep <- pileup$Chromosome %in% chromlevels
     # keep only snps with normal read depth between ndepth and 1000
-    depthN.keep <- (unorms$NOR.DP >= ndepth) & (unorms$NOR.DP < ndepthmax)
+    depthN.keep <- (pileup$NOR.DP >= ndepth) & (pileup$NOR.DP < ndepthmax)
     # reduce the data frame to these snps
-    rcmatX <- unorms[chr.keep & depthN.keep,]
+    rcmatX <- pileup[chr.keep & depthN.keep,]
     # output data frame
     out <- list()
     out$chrom <- rcmatX$Chromosome
@@ -101,8 +110,9 @@ scanSnp <- function(maploc, het, nbhd) {
     zzz$keep
 }
 
-# obtain logR and logOR from read counts and GC-correct logR
 counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, spanT, spanA, spanX) {
+  #' obtain logR and logOR from read counts and GC-correct logR
+  #' @importFrom pctGCdata getGCpct
     out <- mat[mat$keep==1,]
     #out$chrom = gsub('X', '23', out$chrom) #testing replace X with 23
 
@@ -232,6 +242,7 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
   #' @param is.Reference (logical) Indicate whether the snp-pilep is Reference data.
   #' @param gbuild (character) genome build version.
   #' @return A data drame of pileup depth values filtered against del.thresh and err.thresh values.
+  #' @export
 
   pileup <- read.csv(filename, stringsAsFactors=FALSE)
   # remove chr if present in Chrom
@@ -295,17 +306,14 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
   #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
+  #' @export
 
   TumorLoess.span <- TumorLoess[1,]
   TumorLoess <- as.data.frame(TumorLoess[-1,])
   colnames(TumorLoess)[1] <- "key"
 
   if (!is.null(ReferencePileup)) {
-    #colnames(ReferencePileup) <- gsub("File", "RefFile", colnames(ReferencePileup))
-   # if (is.null(ReferenceLoess)) {
-    #  ReferenceLoess <- MakeLoessObject(ReferencePileup)
-    #}
-    #colnames(ReferenceLoess)[1] <-"key"
+   
     ReferenceLoess.span <- ReferenceLoess[1,]
     ReferenceLoess <- as.data.frame(ReferenceLoess[-1,])
     colnames(ReferenceLoess)[1] <- "key"
@@ -339,16 +347,17 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
     combined.span <- c(TumorLoess.span, ReferenceLoess.span[-1])
     }
   else {
-    combined.pileup <- TumorPileup #need to handle this for calculating X snps File vs RefFile
+    combined.pileup <- TumorPileup
     combined.loess <- TumorLoess
     combined.span <- TumorLoess.span
     common.loci <- TumorLoess$key
   }
 
-  # Assumption: First column of data is the key,
-  #  Second column belongs to the Normal sample
-  #  Third column belongs to the Tumor sample
-  #remaining columns are unmatched normals samples
+  # Assumptions: 
+    # First column of data is the key,
+    # Second column belongs to the Normal sample
+    # Third column belongs to the Tumor sample
+    #remaining columns are unmatched normals samples
   
   MatchedNormalIdentifier <- colnames(combined.loess)[2]
   TumorIdentifier <- colnames(combined.loess)[3]
@@ -405,12 +414,14 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
 MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt", is.Reference = FALSE, gbuild="hg19") {
 
   #' MakeLoessObject takes a pipleup file generated by snp-pileup and generates a loess/lowess object, which is also optinally written into an output file.
+  #' @importFrom pctGCdata getGCpct
   #' @param pileup (data frame) A data franme of snp-pileup generated depth.
   #' @param write.loess (logical) Write loess object into file, instead of returning it as a matrix?
   #' @param outfilepath (character) Filepath for writing loess object.
   #' @param is.Reference (logical) Indicate whether the snp-pilep is Reference data.
   #' @param gbuild (character) genome build version.
   #' @return A dataframe of loess normalized values for all input samples against filtered loci or None, if the loess normalized value is to be written to an output file.
+  #' @export
 
   # read pileup data and select rows based on used-defined err and del thresholds
   pileup.select <- pileup

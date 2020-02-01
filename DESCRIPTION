@@ -13,3 +13,5 @@ Depends: R (>= 3.4.0), pctGCdata (>= 0.2.0)
 Remotes: veseshan/pctGCdata
 NeedsCompilation: yes
 Packaged: 2019-10-15 00:01:39 UTC; rptashkin
+Encoding: UTF-8
+RoxygenNote: 7.0.2

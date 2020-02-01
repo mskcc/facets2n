@@ -1,5 +1,20 @@
-#genotype mixture model using EM algorithm to call allele-specific copy number and cellular fraction
 emcncf=function(x,trace=FALSE,unif=FALSE,min.nhet=15,maxiter=10,eps=1e-3){  
+  #' EM estimate of copy number and cellular fraction of segment clusters
+  #' @description  Uses genotype mixture model to estimate the cluster specific copy number and cellular fraction. Uses estimates based on the cnlr.median and mafR as initial values for the EM iteration.
+  #' @param x (list) the output from procSample. This function uses the elements jointseg, out and dipLogR from the output.
+  #' @param trace (logical) flag to print the EM criteria at every step
+  #' @param unif (logical) random EM start values of cellular fractions instead of clusteredcncf values
+  #' @param min.nhet (numeric) minimum number of heterozygote snps in a segment used to call minor cn
+  #' @param maxiter (numeric) maximum number of EM iterations
+  #' @param eps the (numeric) convergence threshold 
+  #' @return A list containing: \item{loglik}{loglikelihood value of the fitted model}
+  #'  \item{purity}{fraction tumor cells in the tumor sample}
+  #'  \item{ploidy}{average total copy number of the tumor cells} 
+  #'  \item{dipLogR}{estimated logR value of diploid segments} 
+  #'  \item{cncf}{dataframe consisting of the columns of segmentation output as well as 
+  #'   cellular fraction (cf), total (tcn) and lesser (lcn) copy number of each segment 
+  #'   and their em counterpart (with .em suffix)}
+  #' @export
   
   jointseg=x$jointseg
   out=x$out
