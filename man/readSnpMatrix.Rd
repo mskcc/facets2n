@@ -2,7 +2,7 @@
 % Please edit documentation in R/facets-wrapper.R
 \name{readSnpMatrix}
 \alias{readSnpMatrix}
-\title{readSnpMatrix takes a snp-pileup generated pileup file and optional pileup and loess data for reference normals and returns depth of select samples based on matched or unmatched analysis.}
+\title{Read in the snp-pileup generated SNP read count matrix file}
 \usage{
 readSnpMatrix(
   filename,
@@ -54,5 +54,5 @@ readSnpMatrix(
 A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
 }
 \description{
-readSnpMatrix takes a snp-pileup generated pileup file and optional pileup and loess data for reference normals and returns depth of select samples based on matched or unmatched analysis.
+Read in the snp-pileup generated SNP read count matrix file
 }

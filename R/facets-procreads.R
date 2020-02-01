@@ -119,9 +119,9 @@ scanSnp <- function(maploc, het, nbhd) {
 
 counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, spanT, spanA, spanX) {
   #' obtain logR and logOR from read counts and GC-correct logR
-  #' @param mat
+  #' @param mat input data
   #' @param gbuild e.g. "hg19"
-  #' @param unmatched
+  #' @param unmatched (logical)
   #' @param MandUnormal analyzing both matched and unmatched normal for log ratio normalization
   #' @param f default span value for loess
   #' @param spanT span value tumor

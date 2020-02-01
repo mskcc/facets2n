@@ -16,7 +16,11 @@ counts2logROR(
 )
 }
 \arguments{
+\item{mat}{input data}
+
 \item{gbuild}{e.g. "hg19"}
+
+\item{unmatched}{(logical)}
 
 \item{MandUnormal}{analyzing both matched and unmatched normal for log ratio normalization}
 

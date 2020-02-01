@@ -3,7 +3,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           spanA=0.2, spanX=0.2, gbuild="hg19",
                           ReferencePileupFile=NULL, ReferenceLoessFile=NULL,
                           MinOverlap=0.90, useMatchedX=FALSE) {
-  #' readSnpMatrix takes a snp-pileup generated pileup file and optional pileup and loess data for reference normals and returns depth of select samples based on matched or unmatched analysis.
+  #' Read in the snp-pileup generated SNP read count matrix file 
   #' @importFrom utils read.csv
   #' @param filename counts file from snp-pileup
   #' @param skip (character) Skip n number of lines in the input file.
