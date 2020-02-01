@@ -17,7 +17,7 @@ devtools::install_github("rptashkin/facets2n")
 ## snp-pileup command options used for IMPACT data
 *hat tip kpjonsson: https://github.com/taylor-lab/facets-suite*
 ```
-external/snp-pileup-wrapper.R \
+inst/extcode/snp-pileup-wrapper.R \
   --snp-pileup-path <optional, path to snp-pileup executable, defaults to snp-pileup in your PATH> \
   --vcf-file <path to SNP VCF> \
   --normal-bam normal.bam \
@@ -29,7 +29,7 @@ external/snp-pileup-wrapper.R \
 ### Example generation of the input counts file for Reference normals using snp-pileup. (Recommended)
 *We suggest at least 5 male and 5 female reference normal BAMs, that were processed in the laboratory and with an analysis pipeline using the same parameters of the tumor sample you are analyzing. For hybridization capture sequencing, we have found that a pooled sample of non-neoplastic tissue (e.g. blood from healthy donors) from 10 individuals captured and sequenced together with the data being analyzed often outperforms the matched normal and individual reference normals for minimizing noise in log ratio plots.*
 ```
-external/snp-pileup-wrapper.R --output-prefix standard_normals_cv3heme  \
+inst/extcode/snp-pileup-wrapper.R --output-prefix standard_normals_cv3heme  \
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf \
   --unmatched-normal-BAMS "<some/path_to_bam_directory>/*-N*.bam"
 ```
@@ -37,7 +37,7 @@ external/snp-pileup-wrapper.R --output-prefix standard_normals_cv3heme  \
 ### Example generation of the input counts file for a tumor-normal pair + sequencing batch control
 *Multiple BAM files can be suppplied as a quoted, space seperated, string to --unmatched-normal-BAMS*
 ```
-external/snp-pileup-wrapper.R --output-prefix P-0029502_NN_TH_PoolNormal  
+inst/extcode/snp-pileup-wrapper.R --output-prefix P-0029502_NN_TH_PoolNormal  
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf
   --normal-bam normal.bam
   --tumor-bam tumor.bam
