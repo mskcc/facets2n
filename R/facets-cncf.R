@@ -1,5 +1,12 @@
 # fitting copy number and cellular fractions (replaces clusteredcncf)
 fitcncf <- function(out, dipLogR=0, nX=23) {
+  #' Copy number and cellular fraction of segment clusters
+  #' @param out the out element from procSample fit
+  #' @param dipLogR log-ratio level corresponding to diploid copy number
+  #' @param nX integer value of ChrX; humans 23 (default); mouse 20.
+  #' @details This function is called internally by procSample. It can be used to refit the model at a different dipLogR value.
+  #' @return A data frame with the same columns as out and three additional columns which give the cellular fraction (cf), total copy number (tcn) and lower copy number (lcn) for each segment. If a cluster does not have sufficient heterozygotes the lcn value will be NA.
+  
     # save the original out
     cncf <- out
     # get the segclust version of out

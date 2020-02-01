@@ -1,5 +1,24 @@
-#genotype mixture model using EM algorithm to call allele-specific copy number and cellular fraction
 emcncf2=function(x,trace=FALSE,unif=FALSE,min.nhet=15,maxiter=10,difcf=0.05,maxk=5,eps=1e-3){  
+  #' EM estimate of copy number and cellular fraction with clonal and subclonal cluster structure
+  #' @description  Uses genotype mixture model to estimate copy number, cellular fraction, and subclonal structures. \
+  #' Uses estimates based on the cnlr.median and mafR as initial values for the EM iteration.
+  #' @param x (list) the output from procSample. This function uses the elements jointseg, out and dipLogR from the output.
+  #' @param trace (logical) flag to print the EM criteria at every step
+  #' @param unif (logical) random EM start values of cellular fractions instead of clusteredcncf values
+  #' @param min.nhet (numeric) minimum number of heterozygote snps in a segment used to call minor cn
+  #' @param maxiter (numeric) maximum number of EM iterations
+  #' @param difcf (numeric) the minimal difference between segment cluster specific cellular fraction estimate and clonally constrained estimate for declaring candidate subclonal events
+  #' @param maxk (numeric) maximum number of clonal and subclonal clusters allowed for the fit
+  #' @param eps (numeric) the convergence threshold
+  #' @return  A list containing: \item{loglik}{loglikelihood value of the fitted model} 
+  #' \item{purity}{fraction tumor cells in the tumor sample}
+  #' \item{ploidy}{average total copy number of the tumor cells}
+  #' \item{dipLogR}{estimated logR value of diploid segments}
+  #' \item{cncf}{dataframe consisting of the columns of segmentation output 
+  #' as well as cellular fraction (cf), total (tcn) and lesser (lcn) copy number of each segment
+  #' and their em counterpart (with .em suffix), and a clonal.cluster indicater with 
+  #' clonal.cluster=1 indicating the clonal cluster and a higher number (2,3, etc..) indicating subclonal clusters.}
+  #' @export
   
   warning("emcncf2 occationally returns quirky copy number estimates due to the clonal cluster structure imposed. please use with caution.")
   
