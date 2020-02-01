@@ -15,6 +15,19 @@ counts2logROR(
   spanX
 )
 }
+\arguments{
+\item{gbuild}{e.g. "hg19"}
+
+\item{MandUnormal}{analyzing both matched and unmatched normal for log ratio normalization}
+
+\item{f}{default span value for loess}
+
+\item{spanT}{span value tumor}
+
+\item{spanA}{span value autosomes}
+
+\item{spanX}{span value X}
+}
 \description{
 obtain logR and logOR from read counts and GC-correct logR
 }

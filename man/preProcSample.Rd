@@ -40,9 +40,15 @@ preProcSample(
 
 \item{unmatched}{indicator of whether the normal sample is unmatched. When this is TRUE hets are called using tumor reads only and logOR calculations are different. Use het.thresh = 0.1 or lower when TRUE.}
 
+\item{MandUnormal}{analyzing both matched and unmatched normal for log ratio normalization}
+
 \item{ndepthmax}{loci for which normal coverage exceeds this number (default is 1000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.}
 
-\item{ugcpct}{If udef is chosen for gbuild then appropriate GC percentage date should be provided through this option. This is a list of numeric vectors that gives the GC percentage windows of width 1000 bases in steps of 100 i.e. 1-1000, 101-1100 etc. for the autosomes and the X chromosome.}
+\item{spanT}{span value tumor}
+
+\item{spanA}{span value autosomes}
+
+\item{spanX}{span value X}
 }
 \value{
 \item{pmat}{Read counts and other elements of all the loci}

@@ -20,11 +20,11 @@ FindBestNormalParameters(
 
 \item{ReferenceLoess}{(matrix) A ReferenceLoess matrix with a header and span values in the first row.}
 
+\item{ReferencePileup}{(data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.}
+
 \item{MinOverlap}{(numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess}
 
 \item{useMatchedX}{(logical) Force select matched normal for normalization in ChrX.}
-
-\item{ReferencePileupFile}{(data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.}
 }
 \value{
 A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.

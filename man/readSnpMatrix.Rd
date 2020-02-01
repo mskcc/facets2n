@@ -22,6 +22,8 @@ readSnpMatrix(
 )
 }
 \arguments{
+\item{filename}{counts file from snp-pileup}
+
 \item{skip}{(character) Skip n number of lines in the input file.}
 
 \item{err.thresh}{(numeric) Error threshold to be used to filter snp-pileup data frame.}

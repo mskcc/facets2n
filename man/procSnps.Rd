@@ -14,6 +14,21 @@ procSnps(
   ndepthmax = 5000
 )
 }
+\arguments{
+\item{rcmat}{input counts matrix}
+
+\item{ndepth}{(numeric) minimum normal sample depth to keep}
+
+\item{het.thresh}{(numeric) vaf threshold to call a SNP heterozygous}
+
+\item{snp.nbhd}{(logical) window size}
+
+\item{gbuild}{(character) genome build version.}
+
+\item{unmatched}{(logical)}
+
+\item{ndepthmax}{(numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.}
+}
 \description{
 heterozygous and keep flags of the SNPs
 }

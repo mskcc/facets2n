@@ -5,7 +5,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           MinOverlap=0.90, useMatchedX=FALSE) {
   #' readSnpMatrix takes a snp-pileup generated pileup file and optional pileup and loess data for reference normals and returns depth of select samples based on matched or unmatched analysis.
   #' @importFrom utils read.csv
-  #' @import stats
+  #' @param filename counts file from snp-pileup
   #' @param skip (character) Skip n number of lines in the input file.
   #' @param err.thresh (numeric) Error threshold to be used to filter snp-pileup data frame.
   #' @param del.thresh (numeric) Deletion threshold to be used to filter snp-pileup data frame.
@@ -77,10 +77,13 @@ preProcSample <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, cval=
 #' @param cval critical value for segmentation
 #' @param deltaCN minimum detectable difference in CN from diploid state
 #' @param gbuild genome build used for the alignment of the genome. Default value is human genome build hg19. Other possibilities are hg38 & hg18 for human and mm9 & mm10 for mouse. Chromosomes used for analysis are 1-22, X for humans and 1-19 for mouse. Option udef can be used to analyze other genomes.
-#' @param ugcpct If udef is chosen for gbuild then appropriate GC percentage date should be provided through this option. This is a list of numeric vectors that gives the GC percentage windows of width 1000 bases in steps of 100 i.e. 1-1000, 101-1100 etc. for the autosomes and the X chromosome.
 #' @param hetscale (logical) variable to indicate if logOR should get more weight in the test statistics for segmentation and clustering. Usually only 10\% of snps are hets and hetscale gives the logOR contribution to T-square as 0.25/proportion of hets.
 #' @param unmatched indicator of whether the normal sample is unmatched. When this is TRUE hets are called using tumor reads only and logOR calculations are different. Use het.thresh = 0.1 or lower when TRUE.
 #' @param ndepthmax loci for which normal coverage exceeds this number (default is 1000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
+#' @param MandUnormal analyzing both matched and unmatched normal for log ratio normalization
+#' @param spanT span value tumor
+#' @param spanA span value autosomes
+#' @param spanX span value X
 #' @details  The SNPs in a genome are not evenly spaced. Some regions have multiple SNPs in a small neighborhood. 
 #' Thus using all loci will induce serial correlation in the data. To avoid it we sample loci such that only 
 #' a single locus is used in an interval of length snp.nbhd. So in order to get 
@@ -184,7 +187,6 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   #' Plot the data and results for a single sample
   #' @description Plots copy number log-ratio, variant allele log-odds ratio as well as the copy number and cellular fraction fits.
   #' @importFrom grDevices colorRampPalette
-  #' @import graphics
   #' @export
   def.par <- par(no.readonly = TRUE) # save default, for resetting...
   # plot.type
@@ -286,6 +288,11 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
 
 logRlogORspider <- function(cncf, dipLogR=0, nfrac=0.005) {
   #' logRlogRsplide plot generation from cncf input
+  #' @description Plots copy number log-ratio, variant allele log-odds ratio as well as the copy number and cellular fraction fits.
+  #' @param cncf Copy number and cellular fraction data frame either the naive one (out) from procSample or the EM fit (cncf) from emcncf.
+  #' @param dipLogR the log-ratio value corresponding to the diploid state.
+  #' @param nfrac a segment is shown if the proportion of loci and het SNPs (num.mark and nhet) nfrac. Default is 0.01.
+  #' @details This is a diagnostic plot to check how well the copy number fits work. The estimated segment summaries are plotted as circles where the size of the circle increases with the number of loci in the segment. The expected value for various integer copy number states are drawn as curves for purity ranging from 0 to 0.95. For a good fit, the segment summaries should be close to one of the lines.
   #' @export
   rho <- seq(0, 0.95, by=0.01)
   nrho <- length(rho)
