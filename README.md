@@ -23,7 +23,7 @@ inst/extcode/snp-pileup-wrapper.R \
   --normal-bam normal.bam \
   --tumor-bam tumor.bam \
   --output-prefix <prefix for output file, preferrably tumorSample__normalSample>
-  --unmatched_normal_BAMS <if using unmatched BAMs for logR normalization, e.g. "<some/path/>*-N.bam" >
+  --unmatched-normal-BAMS <if using unmatched BAMs for logR normalization, e.g. "<some/path/>*-N.bam" >
 ```
 
 ### Example generation of the input counts file for Reference normals using snp-pileup. (Recommended)

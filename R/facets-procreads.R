@@ -75,9 +75,9 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     out$vafN <- 1 - rcmatX$NOR.RD/rcmatX$NOR.DP
     out = as.data.frame(out)
 
-    normCount = length(grep("^File([0-9]{1,})DP$", colnames(rcmatX)))
+    normCount = length(grep("^File([3-9]|[1-9]{2,})DP$", colnames(rcmatX)))
     RefnormCount = length(grep("^RefFile([0-9]{1,})DP$", colnames(rcmatX)))
-
+    
     for(i in 3:(3+normCount-1)){
         tempVAF = paste('File', i, "VAF", sep="")
         tempR = paste("File", i, "R", sep="")
@@ -86,14 +86,16 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
         out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
     }
- 
-    for(i in 1:RefnormCount){
-      tempVAF = paste('RefFile', i, "VAF", sep="")
-      tempR = paste("RefFile", i, "R", sep="")
-      tempDP = paste("RefFile", i, "DP", sep="")
-      tempHET = paste("RefFile", i, "DPhet", sep="")
-      out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
-      out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+   
+    if (RefnormCount>0){
+      for(i in 1:RefnormCount){
+        tempVAF = paste('RefFile', i, "VAF", sep="")
+        tempR = paste("RefFile", i, "R", sep="")
+        tempDP = paste("RefFile", i, "DP", sep="")
+        tempHET = paste("RefFile", i, "DPhet", sep="")
+        out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
+        out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+      }
     }
     
     out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
@@ -360,9 +362,14 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
     )
 
     combined.span <- c(TumorLoess.span, ReferenceLoess.span[-1])
-    }
+  }
   else {
     combined.pileup <- TumorPileup
+    combined.pileup$NOR.DP <- combined.pileup$File1R + combined.pileup$File1A
+    combined.pileup$NOR.RD <- combined.pileup$File1R
+    combined.pileup$TUM.DP <- combined.pileup$File2R + combined.pileup$File2A
+    combined.pileup$TUM.RD <- combined.pileup$File2R
+    
     combined.loess <- TumorLoess
     combined.span <- TumorLoess.span
     common.loci <- TumorLoess$key
@@ -400,7 +407,8 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   }
   else {
     #limit normals for X normalization to those matching patient sex
-    combined.loess.useX = row.names(snpsX[which(snpsX$sampleSex==sampleSex & row.names(snpsX) != "NOR.DP"),])
+    combined.loess.useX = row.names(snpsX[which(snpsX$sampleSex==sampleSex),])
+    combined.loess.useX = gsub("NOR.DP", "File1DP", combined.loess.useX)
 
     noiseX <- do.call('rbind',list(apply(subset(combined.loess[x.idx,-c(1,3), drop=F],select = c(combined.loess.useX)),2,function(column){
       lr = log2(as.numeric(levels(combined.loess[x.idx,3]))[combined.loess[x.idx,3]]) -
@@ -413,7 +421,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
 
   message(sprintf("Best normal for autosomes: %s\nBest normal for ChrX: %s\n",
                   best_normAuto, best_normX))
-
+  
   rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
             UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]))
   
