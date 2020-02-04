@@ -357,7 +357,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   
     colkeep = colnames(TumorPileup.common)[grep("File([3-9]|[1-9]{2,})", colnames(TumorPileup.common))]
     combined.pileup <- cbind(
-      TumorPileup.common[,c(colkeep,"NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
+      TumorPileup.common[,c(colkeep,"File1DP", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
       ReferencePileup.common
     )
 
@@ -453,18 +453,19 @@ MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt"
   pileup.select.dp <- pileup.select[,grep(paste(c("^key$", "^Chromosome$", "^Position$", "File.*DP$"),collapse="|"), colnames(pileup.select))]
   
   if (is.Reference) {
-    pileup.select.dp$medianDP<- apply(pileup.select.dp[,grep("RefFile.*DP", colnames(pileup.select.dp))], 1, median, na.rm=T)
-    pileup.select.dp$q25<- apply(pileup.select.dp[,grep("RefFile.*DP", colnames(pileup.select.dp))], 1, quantile, probs=0.25, na.rm=T)
-   
+    message("starting loess normalization for reference samples")
+    #pileup.select.dp$medianDP<- apply(pileup.select.dp[,grep("RefFile.*DP", colnames(pileup.select.dp))], 1, median, na.rm=T)
+    #pileup.select.dp$q25<- apply(pileup.select.dp[,grep("RefFile.*DP", colnames(pileup.select.dp))], 1, quantile, probs=0.25, na.rm=T)
+    #pileup.select.dp <- pileup.select.dp[which(pileup.select.dp$q25>quantile(pileup.select.dp$medianDP, 0.1)),]
+    #pileup.select.dp <- subset(pileup.select.dp, select=-c(q25, medianDP))
   }
   else {
-    pileup.select.dp$medianDP<- apply(pileup.select.dp[,grep("File.*DP", colnames(pileup.select.dp))][,-c(2), drop=F], 1, median, na.rm=T)
-    pileup.select.dp$q25<- apply(pileup.select.dp[,grep("File.*DP", colnames(pileup.select.dp))][,-c(2), drop=F], 1, quantile, probs=0.25, na.rm=T)
-    
+    #message("skipping quantile covg filtering")
+    #pileup.select.dp$medianDP<- apply(pileup.select.dp[,grep("File([1]|[3-9]|[1-9]{2,})DP$", colnames(pileup.select.dp))][,-c(2), drop=F], 1, median, na.rm=T)
+    #pileup.select.dp$q25<- apply(pileup.select.dp[,grep("File([1]|[3-9]|[1-9]{2,})DP$", colnames(pileup.select.dp))][,-c(2), drop=F], 1, quantile, probs=0.25, na.m=T)
+    #pileup.select.dp <- pileup.select.dp[which(pileup.select.dp$q25>quantile(pileup.select.dp$medianDP, 0.1)),]
+    #pileup.select.dp <- subset(pileup.select.dp, select=-c(q25, medianDP))
   }
-
-  pileup.select.dp <- pileup.select.dp[which(pileup.select.dp$q25>quantile(pileup.select.dp$medianDP, 0.1)),]
-  pileup.select.dp <- subset(pileup.select.dp, select=-c(q25, medianDP))
 
   gcout <- subset(pileup.select.dp, select=c(Chromosome, Position))
   gcout$gcpct <- rep(NA_real_, nrow(gcout))
