@@ -1,7 +1,7 @@
 Package: facets2n
 Type: Package
 Title: Cellular Fraction and Copy Numbers from Tumor Sequencing
-Version: 0.2.1
+Version: 0.2.2
 Date: 2019-02-01
 Author: Venkatraman E. Seshan and Ronglai Shen, support for multiple unmatched normals: Ryan Ptashkin
 Maintainer: Ryan Ptashkin <ptashkir@mskcc.org>
@@ -12,6 +12,6 @@ License: GPL (>= 2)
 Depends: R (>= 3.4.0), pctGCdata (>= 0.2.0)
 Remotes: veseshan/pctGCdata
 NeedsCompilation: yes
-Packaged: 2019-02-02 01:36:11 UTC; rptashkin
+Packaged: 2019-02-04 18:47:32 UTC; rptashkin
 Encoding: UTF-8
 RoxygenNote: 7.0.2
