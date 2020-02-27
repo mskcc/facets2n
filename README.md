@@ -73,7 +73,7 @@ readu <- readSnpMatrix(
 #### The following steps are applicable to either of approaches above.
 ```
 xx <- preProcSample(readu$rcmat, unmatched = F,
-  ndepth = 10,het.thresh = 0.25, ndepthmax = 5000,
+  ndepth = 50,het.thresh = 0.25, ndepthmax = 5000,
   spanT = readu$spanT, spanA=readu$spanA, spanX = readu$spanX,
   MandUnormal = TRUE)
 ```
