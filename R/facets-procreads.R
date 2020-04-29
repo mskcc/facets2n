@@ -321,7 +321,7 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
 ###########################################################################
 FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                                      ReferenceLoess=NULL, ReferencePileup=NULL,
-                                     MinOverlap=0.90, useMatchedX=FALSE) {
+                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
   #' FindBestNormalParameters takes takes a facets2n generated tumor loess object and snp-pileup generated pileup file, and optional similar files for reference normals, and returns the pileup data for the best normal for T/N CNLR.
   #' @param TumorLoess (matrix) A facets2n generated TumorLoess matrix with header and span values in the first row.
   #' @param TumorPileup (data frame) snp-pileup generated pileup data frame with sample columns that match with the TumorLoess object.
@@ -329,6 +329,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @param ReferencePileup (data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
   #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
+  #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
 
@@ -415,6 +416,9 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   else {
     #limit normals for X normalization to those matching patient sex
     combined.loess.useX = row.names(snpsX[which(snpsX$sampleSex==sampleSex),])
+    if(refX){
+      combined.loess.useX = combined.loess.useX[grep("NOR.DP|^RefFile", combined.loess.useX)]
+    }
     combined.loess.useX = gsub("NOR.DP", "File1DP", combined.loess.useX)
 
     noiseX <- do.call('rbind',list(apply(subset(combined.loess[x.idx,-c(1,3), drop=F],select = c(combined.loess.useX)),2,function(column){
@@ -511,7 +515,7 @@ MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt"
       spanvar <- var(fit2,na.rm=TRUE) #Calculate the variance to find the flattest line after fitting
       return(round(spanvar,5));
     }
-    optimize.obj <-	optimize(testspan,interval=c(0.1,0.9),maximum=F);  #change to 0.2, 0.8?
+    optimize.obj <-	optimize(testspan,interval=c(0.1,0.9),maximum=F);
     return(c('min'=optimize.obj$minimum,'obj'=optimize.obj$objective));
   })));
 

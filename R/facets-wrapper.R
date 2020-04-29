@@ -2,7 +2,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           perl.pileup=FALSE, MandUnormal=FALSE, spanT=0.2,
                           spanA=0.2, spanX=0.2, gbuild="hg19",
                           ReferencePileupFile=NULL, ReferenceLoessFile=NULL,
-                          MinOverlap=0.90, useMatchedX=FALSE) {
+                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
   #' Read in the snp-pileup generated SNP read count matrix file 
   #' @importFrom utils read.csv
   #' @param filename counts file from snp-pileup
@@ -19,6 +19,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
   #' @param ReferenceLoessFile (character) Filepath to an optional loess data, generated using the facets2n package, of one or more reference normals. The number of normals in this data should match that in the ReferencePileupFile, and should be in the same order.
   #' @param MinOverlap (numeric) Mininum overlap fraction of loci between a tumor pileup and reference pileup data.
   #' @param useMatchedX (logical) Is the matched normal to be used for ChrX normalization?
+  #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @return A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
 
@@ -53,7 +54,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
           reference.loess,
           reference.pileup,
           MinOverlap,
-          useMatchedX
+          useMatchedX, 
+          refX
         )
       }
       else{
@@ -64,7 +66,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
         reference.loess,
         reference.pileup,
         MinOverlap,
-        useMatchedX
+        useMatchedX, 
+        refX
         )
       }
       return(rcmat)

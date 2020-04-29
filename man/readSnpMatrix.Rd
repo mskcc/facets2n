@@ -18,7 +18,8 @@ readSnpMatrix(
   ReferencePileupFile = NULL,
   ReferenceLoessFile = NULL,
   MinOverlap = 0.9,
-  useMatchedX = FALSE
+  useMatchedX = FALSE,
+  refX = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ readSnpMatrix(
 \item{MinOverlap}{(numeric) Mininum overlap fraction of loci between a tumor pileup and reference pileup data.}
 
 \item{useMatchedX}{(logical) Is the matched normal to be used for ChrX normalization?}
+
+\item{refX}{(logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix.}
 }
 \value{
 A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
