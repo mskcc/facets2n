@@ -46,19 +46,22 @@ inst/extcode/snp-pileup-wrapper.R --output-prefix P-0029502_NN_TH_PoolNormal
 
 ## Run FACETS with unmatched normal samples for CNLR
 
-#### There are two ways to run the unmatched analyis. The reference normal loess data can be generated independently (as above) and used for subsequent analysis as shown below. This will substantially decrease analysis time if you will be using the same set of unmatched normals for multiple analyses.
+#### There are two ways to run the unmatched analyis. The reference normal loess data can be generated independently (as above, with non-pooled samples) and used for subsequent analysis as shown below. This will substantially decrease analysis time if you will be using the same set of unmatched normals for multiple analyses. 
 *The runtime of readSnpMatrix() increases with number of unmatched normal samples*
 
+#### Generating the reference loess files will take several minutes, but needs to be performed just once for a given sequencing panel.
 ```
 library(facets2n)
 MakeLoessObject(pileup = PreProcSnpPileup(filename = "tests/standard_normals_cv3heme.snp_pileup.gz", is.Reference = TRUE), write.loess = TRUE, outfilepath = "tests/standard_normals_cv3heme.loess.txt", is.Reference = TRUE)
 ```
+#### including the argument refX=TRUE in call to readSnpMatrix() will exclude any pooled reference samples from chrX normalization (preffered). 
 ```
 readu <- readSnpMatrix(filename = "tests/P-0029502_NN_TH_PoolNormal.snp_pileup.gz",
   MandUnormal = TRUE,
   ReferencePileupFile = "tests/standard_normals_cv3heme.snp_pileup.gz",
   ReferenceLoessFile = "tests/standard_normals_cv3heme.loess.txt",
-  useMatchedX = FALSE)
+  useMatchedX = FALSE,
+  refX=TRUE)
 ```
 
 #### Alternatively, the tumor, normal, and reference unmatched normals pileup data can all be provided in a single counts file and loess normalization for all samples will take place at run-time.
@@ -73,7 +76,7 @@ readu <- readSnpMatrix(
 #### The following steps are applicable to either of approaches above.
 ```
 xx <- preProcSample(readu$rcmat, unmatched = F,
-  ndepth = 10,het.thresh = 0.25, ndepthmax = 5000,
+  ndepth = 50,het.thresh = 0.25, ndepthmax = 5000,
   spanT = readu$spanT, spanA=readu$spanA, spanX = readu$spanX,
   MandUnormal = TRUE)
 ```

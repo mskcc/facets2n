@@ -10,7 +10,8 @@ FindBestNormalParameters(
   ReferenceLoess = NULL,
   ReferencePileup = NULL,
   MinOverlap = 0.9,
-  useMatchedX = FALSE
+  useMatchedX = FALSE,
+  refX = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ FindBestNormalParameters(
 \item{MinOverlap}{(numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess}
 
 \item{useMatchedX}{(logical) Force select matched normal for normalization in ChrX.}
+
+\item{refX}{(logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix.}
 }
 \value{
 A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.

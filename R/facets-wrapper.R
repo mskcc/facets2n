@@ -2,7 +2,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           perl.pileup=FALSE, MandUnormal=FALSE, spanT=0.2,
                           spanA=0.2, spanX=0.2, gbuild="hg19",
                           ReferencePileupFile=NULL, ReferenceLoessFile=NULL,
-                          MinOverlap=0.90, useMatchedX=FALSE) {
+                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
   #' Read in the snp-pileup generated SNP read count matrix file 
   #' @importFrom utils read.csv
   #' @param filename counts file from snp-pileup
@@ -19,6 +19,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
   #' @param ReferenceLoessFile (character) Filepath to an optional loess data, generated using the facets2n package, of one or more reference normals. The number of normals in this data should match that in the ReferencePileupFile, and should be in the same order.
   #' @param MinOverlap (numeric) Mininum overlap fraction of loci between a tumor pileup and reference pileup data.
   #' @param useMatchedX (logical) Is the matched normal to be used for ChrX normalization?
+  #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @return A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
 
@@ -53,7 +54,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
           reference.loess,
           reference.pileup,
           MinOverlap,
-          useMatchedX
+          useMatchedX, 
+          refX
         )
       }
       else{
@@ -64,7 +66,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
         reference.loess,
         reference.pileup,
         MinOverlap,
-        useMatchedX
+        useMatchedX, 
+        refX
         )
       }
       return(rcmat)
@@ -148,10 +151,10 @@ procSample <- function(x, cval=150, min.nhet=15, dipLogR=NULL) {
   if (x$gbuild %in% c("mm9", "mm10")) chromlevels <- c(1:19,"X")[chrs]
   # get the segment summary for the fit in seg.tree
   nsegs <- 0
+  # jointseg already has a seg variable numbered 1 thru number of segments for each chromosome
   for (i in 1:nchr) {
-    seg.widths <- diff(c(0, sort(unique(x$seg.tree[[i]][,3]))))
-    jseg$seg[jseg$chrom==chrs[i]] <- nsegs + rep(1:length(seg.widths), seg.widths)
-    nsegs <- nsegs + length(seg.widths)
+    jseg$seg[jseg$chrom==chrs[i]] <- nsegs + jseg$seg[jseg$chrom==chrs[i]]
+    nsegs <- max(jseg$seg[jseg$chrom==chrs[i]])
   }
   focalout <- jointsegsummary(jseg)
   # cnlr.median to the left and right
@@ -212,8 +215,10 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   jseg <- x$jointseg
   # chromosome boundaries
   chrbdry <- which(diff(jseg$chrom) != 0)
+  out=NULL
   if (missing(emfit)) {
     out <- x$out
+    out$lcn[out$tcn == 1] = 0 #fix bad NAs
     if (plot.type=="em" | plot.type=="both") {
       warning("emfit is missing; plot.type set to naive")
       plot.type <- "naive"
@@ -221,8 +226,10 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   } else {
     out <- emfit$cncf
     # add the naive tcn, lcn and cf to out
-    out$tcn <- x$out$tcn
+    out$tcn <- x$out$tcn 
     out$lcn <- x$out$lcn
+    out$lcn[out$tcn == 1] = 0 #fix bad NAs
+    out$lcn.em[out$tcn.em == 1] = 0
     out$cf <- x$out$cf
   }
   # determine which of the cnlr.median & mafR to show
@@ -242,34 +249,23 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   segstart <- segbdry[-length(segbdry)]
   segend <- segbdry[-1]
   # plot the logR data and segment medians
-  yvals=jseg$cnlr[is.finite(jseg$cnlr)]
-  plot(jseg$cnlr[is.finite(jseg$cnlr)], pch=".", cex=2.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-ratio", xaxt="n", ylim=c(min(quantile(yvals,0.95)-1,-2)-0.1,max(yvals,2)+.1))
+  ymin = floor(min(out$cnlr.median, na.rm = T))
+  ymax = ceiling(max(out$cnlr.median, na.rm = T))
+  if (ymin > -2) ymin = -2
+  if (ymax < 2) ymax = 2
+  
+  plot(jseg$cnlr[is.finite(jseg$cnlr)], pch=1, cex=.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-ratio", xaxt="n", ylim=c(ymin,ymax))
   abline(v=chrbdry, lwd=0.25)
   abline(h=median(jseg$cnlr, na.rm=TRUE), col="green2")
   abline(h = x$dipLogR, col = "magenta4")
-  segments(segstart, cnlr.median, segend, cnlr.median, lwd=1.75, col=2)
+  segments(segstart, cnlr.median, segend, cnlr.median, lwd=1.75, col='red')
   # plot the logOR data and mafR
-  plot(jseg$valor[is.finite(jseg$cnlr)], pch=".", cex=2.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-odds-ratio", ylim=c(-4,4), xaxt="n")
+  plot(jseg$valor[is.finite(jseg$cnlr)], pch=1, cex=.5, col = c("grey","lightblue","azure4","slateblue")[chrcol], ylab="log-odds-ratio", ylim=c(-4,4), xaxt="n")
   abline(v=chrbdry, lwd=0.25)
-  segments(segstart, sqrt(mafR), segend, sqrt(mafR), lwd=1.75, col=2)
-  segments(segstart, -sqrt(mafR), segend, -sqrt(mafR), lwd=1.75, col=2)
-  # naive copy number and cellular faction pieces
+  segments(segstart, sqrt(mafR), segend, sqrt(mafR), lwd=1.75, col='red')
+  segments(segstart, -sqrt(mafR), segend, -sqrt(mafR), lwd=1.75, col='red')
+
   cfpalette <- c(colorRampPalette(c("white", "steelblue"))(10),"bisque2")
-  if (plot.type=="naive" | plot.type=="both") {
-    # plot the estimated copy numbers and cf
-    out$tcn[out$tcn > 10] <- 9 + log10(out$tcn[out$tcn > 10])
-    ii <- which(out$lcn > 5)
-    if (length(ii)>0) out$lcn[ii] <- 5 + log10(out$lcn[ii])
-    plot(c(0,length(jseg$cnlr)), c(0,max(out$tcn)), type="n", ylab="copy number (nv)", xaxt="n")
-    abline(v=chrbdry, lwd=0.25)
-    segments(segstart, out$tcn, segend, out$tcn, lwd=2, col=1)
-    segments(segstart, out$lcn, segend, out$lcn, lwd=1.5, col=2)
-    # add the cf
-    plot(c(0,length(jseg$cnlr)), 0:1, type="n", ylab="", xaxt="n", yaxt="n")
-    mtext("cf-nv", side=2, at=0.5, line=0.3, las=2, cex=0.75)
-    cfcol <- cfpalette[round(10*out$cf+0.501)]
-    rect(segstart, 0, segend, 1, col=cfcol, border=NA)
-  }
   # EM copy number and cellular faction pieces
   if (plot.type=="em" | plot.type=="both") {
     # plot the estimated copy numbers and cf
@@ -278,12 +274,28 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
     if (length(ii)>0) out$lcn.em[ii] <- 5 + log10(out$lcn.em[ii])
     plot(c(0,length(jseg$cnlr)), c(0,max(out$tcn.em)), type="n", ylab="copy number (em)", xaxt="n")
     abline(v=chrbdry, lwd=0.25)
-    segments(segstart, out$tcn.em, segend, out$tcn.em, lwd=2, col=1)
-    segments(segstart, out$lcn.em, segend, out$lcn.em, lwd=1.5, col=2)
+    segments(segstart, out$tcn.em, segend, out$tcn.em, lwd=2, col='black')
+    segments(segstart, out$lcn.em, segend, out$lcn.em, lwd=1.5, col='red')
     # add the cf
     plot(c(0,length(jseg$cnlr)), 0:1, type="n", ylab="", xaxt="n", yaxt="n")
     mtext("cf-em", side=2, at=0.5, line=0.2, las=2, cex=0.75)
     cfcol <- cfpalette[round(10*out$cf.em+0.501)]
+    rect(segstart, 0, segend, 1, col=cfcol, border=NA)
+  }
+  # naive copy number and cellular faction pieces
+  if (plot.type=="naive" | plot.type=="both") {
+    # plot the estimated copy numbers and cf
+    out$tcn[out$tcn > 10] <- 9 + log10(out$tcn[out$tcn > 10])
+    ii <- which(out$lcn > 5)
+    if (length(ii)>0) out$lcn[ii] <- 5 + log10(out$lcn[ii])
+    plot(c(0,length(jseg$cnlr)), c(0,max(out$tcn)), type="n", ylab="copy number (nv)", xaxt="n")
+    abline(v=chrbdry, lwd=0.25)
+    segments(segstart, out$tcn, segend, out$tcn, lwd=2, col='black')
+    segments(segstart, out$lcn, segend, out$lcn, lwd=1.5, col='red')
+    # add the cf
+    plot(c(0,length(jseg$cnlr)), 0:1, type="n", ylab="", xaxt="n", yaxt="n")
+    mtext("cf-nv", side=2, at=0.5, line=0.3, las=2, cex=0.75)
+    cfcol <- cfpalette[round(10*out$cf+0.501)]
     rect(segstart, 0, segend, 1, col=cfcol, border=NA)
   }
 
@@ -293,7 +305,7 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   if (is.null(chromlevels)) chromlevels <- 1:length(nn)
   axis(labels=chromlevels, side=1, at=(nn+c(0,nn[-length(nn)]))/2, cex=0.65)
   mtext(side=1, line=1.75, "Chromosome", cex=0.8)
-  if (!missing(sname)) mtext(sname, side=3, line=0, outer=TRUE, cex=0.8)
+  if (!missing(sname)) mtext(sname, side=3, line=0, outer=TRUE, cex=0.75)
   par(def.par)  #- reset to default
 }
 
