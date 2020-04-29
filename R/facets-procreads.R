@@ -27,6 +27,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     out$rCountN <- rcmat$NOR.DP
     # if count matrix has unmatched normal as well include it
     if (hasName(rcmat, "UMN.DP")) out$umNrCount <- rcmat$UMN.DP
+    if (hasName(rcmat, "UMNX.DP")) out$umNrXCount <- rcmat$UMNX.DP
     out$vafT <- 1 - rcmat$TUM.RD/rcmat$TUM.DP
     out$vafN <- 1 - rcmat$NOR.RD/rcmat$NOR.DP
     # make chromosome ordered and numeric
@@ -158,6 +159,11 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, sp
     } else {
         rCountN <- out$rCountN
     }
+    
+    if (hasName(mat, "umNrXCount")) {
+            rCountNX <- out$umNrXCount
+            normal_X_sqrt = sqrt(rCountNX)
+    }
     rCountT <- out$rCountT
     vafT <- out$vafT
     vafN <- out$vafN
@@ -185,39 +191,40 @@ counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, sp
     normal_sqrt.auto = normal_sqrt[-x.idx]
     normal_sqrt.x    = normal_sqrt[x.idx]
 
-    #loess regression for lr tumor autosomes and X seperately.
-    loess_tumor.auto = lowess(gcpct.auto,tumor_sqrt.auto, f=spanT) #need to change this to input value from span.fits
-    jj=match(gcpct.auto, loess_tumor.auto$x)
-    fit<-loess_tumor.auto$y[jj]
-    #loess_tumor.auto <-loess(tumor_sqrt.auto~gcpct.auto,span=f);
-   # temp<-predict(loess_tumor.auto);
-    normalized_t.auto<-(tumor_sqrt.auto-fit+median(tumor_sqrt.auto))/(median(tumor_sqrt.auto[which(tumor_sqrt.auto != 0)]));
+    loess_tumor.all = lowess(gcpct,tumor_sqrt, f=spanT) #need to change this to input value from span.fits
+    jj=match(gcpct, loess_tumor.all$x)
+    fit<-loess_tumor.all$y[jj]
 
-    loess_tumor.x <-lowess(gcpct.x,tumor_sqrt.x,f=spanT);
-    jj=match(gcpct.x, loess_tumor.x$x)
-    fit<-loess_tumor.x$y[jj]
-    #temp<-predict(loess_tumor.x);
-    normalized_t.x<-(tumor_sqrt.x-fit+median(tumor_sqrt.x))/(median(tumor_sqrt.x[which(tumor_sqrt.x != 0)]));
-
-    tumor_rt = c(normalized_t.auto, normalized_t.x)
-
+    normalized_t.all<-(tumor_sqrt-fit+median(tumor_sqrt))/(median(tumor_sqrt[which(tumor_sqrt != 0)]));
+    
+    tumor_rt = normalized_t.all
+    tumor_rt = tumor_rt^2
+    
     #loess regression for lr normal autosomes and X seperately.
     loess_normal.auto <-lowess(gcpct.auto, normal_sqrt.auto,f=spanA);
-   # temp<-predict(loess_normal.auto);
     jj=match(gcpct.auto, loess_normal.auto$x)
     fit<-loess_normal.auto$y[jj]
     normalized_n.auto<-(normal_sqrt.auto-fit+median(normal_sqrt.auto))/(median(normal_sqrt.auto[which(normal_sqrt.auto != 0)]));
 
-    loess_normal.x <-lowess(gcpct.x,normal_sqrt.x,f=spanX);
-    jj=match(gcpct.x, loess_normal.x$x)
+    if (hasName(mat, "umNrXCount")) {
+    loess_normal.x <-lowess(gcpct,normal_X_sqrt,f=spanX);
+    jj=match(gcpct, loess_normal.x$x)
     fit<-loess_normal.x$y[jj]
     #temp<-predict(loess_normal.x);
-    normalized_n.x<-(normal_sqrt.x-fit+median(normal_sqrt.x))/(median(normal_sqrt.x[which(normal_sqrt.x != 0)]));
-
-    normal_rt = c(normalized_n.auto, normalized_n.x)
-
+    normalized_n.x<-(normal_X_sqrt-fit+median(normal_X_sqrt))/(median(normal_X_sqrt[which(normal_X_sqrt != 0)]));
+    normal_rt = c(normalized_n.auto, normalized_n.x[x.idx])
+    }
+    else{
+      loess_normal.x <-lowess(gcpct.x,normal_sqrt.x,f=spanX);
+      jj=match(gcpct.x, loess_normal.x$x)
+      fit<-loess_normal.x$y[jj]
+      #temp<-predict(loess_normal.x);
+      normalized_n.x<-(normal_sqrt.x-fit+median(normal_sqrt.x))/(median(normal_sqrt.x[which(normal_sqrt.x != 0)]));
+      normal_rt = c(normalized_n.auto, normalized_n.x)
+    }
+    normal_rt = normal_rt^2
     #calculate log2 ratios
-    cnlr = log2(0.25+tumor_rt^2) - log2(0.25+normal_rt^2) #square to fix overcorrection of logR magnitude
+    cnlr = log2(0.25+tumor_rt) - log2(0.25+normal_rt)
 
     #####################################
     #use old method of cnlr calc if matched normal
@@ -423,7 +430,8 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                   best_normAuto, best_normX))
   
   rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
-            UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]))
+            UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]), UMNX.DP = combined.pileup[,best_normX])
+  
   
   return(list("rcmat"=rcmat,
             "spanT"=as.numeric(combined.span[TumorIdentifier]), # Assume that tumor data is always in the third column as expected
@@ -496,7 +504,7 @@ MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt"
       loess.obj<-lowess(gc.bias, column_sqrt,f=spanvalue);
       jj <- match(pileup.select.dp$gcpct, loess.obj$x)
       fit <- loess.obj$y[jj]#Calculation of the loess fit for each spanvalue
-      normalized<-column_sqrt-fit+median(column_sqrt) #Data normalized for each spanvalue
+      normalized<-(column_sqrt-fit+median(column_sqrt))/(median(column_sqrt[which(column_sqrt != 0)]));#Data normalized for each spanvalue
 
       loess.obj2<-lowess(gc.bias,normalized,f=spanvalue);
       fit2 <- loess.obj2$y  #The "fit" of each normalized data point - the result gives the flat-ish line
