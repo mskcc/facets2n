@@ -103,6 +103,8 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     }
     
     out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
+    out$TUM.DPhet <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh)
+    
     out.hets = out[,grep("het", colnames(out))]
     out.hets = as.data.frame(colSums(out.hets, na.rm = T))
     colnames(out.hets) = "numHet"
@@ -324,7 +326,7 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
 ###########################################################################
 FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                                      ReferenceLoess=NULL, ReferencePileup=NULL,
-                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
+                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE) {
   #' FindBestNormalParameters takes takes a facets2n generated tumor loess object and snp-pileup generated pileup file, and optional similar files for reference normals, and returns the pileup data for the best normal for T/N CNLR.
   #' @param TumorLoess (matrix) A facets2n generated TumorLoess matrix with header and span values in the first row.
   #' @param TumorPileup (data frame) snp-pileup generated pileup data frame with sample columns that match with the TumorLoess object.
@@ -332,6 +334,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @param ReferencePileup (data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
   #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
+  #' @param unmatched (logical)
   #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
@@ -401,8 +404,16 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
 
   #determine sex of sample and unmatched nornmals
   snpsX = procXSnps(combined.pileup, nhet=10)
-  sampleSex = snpsX["NOR.DP", "sampleSex"]
-  message("imputed patient sex: ", sampleSex)
+  
+  sampleSex ="Female"
+  if (unmatched){
+    sampleSex = snpsX["TUM.DP", "sampleSex"]
+    message("imputed patient sex from Tumor, experimental: ", sampleSex)
+  }else{
+    sampleSex = snpsX["NOR.DP", "sampleSex"]
+    message("imputed patient sex from matched normal: ", sampleSex)
+  }
+
 
   #calculate noise of tumor against normals for autosomes and ChrX seperately
   noiseAuto <- do.call('rbind',list(apply(combined.loess[-x.idx,-c(1,3), drop=F],2,function(column){

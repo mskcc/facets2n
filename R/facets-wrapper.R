@@ -2,7 +2,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           perl.pileup=FALSE, MandUnormal=FALSE, spanT=0.2,
                           spanA=0.2, spanX=0.2, gbuild="hg19",
                           ReferencePileupFile=NULL, ReferenceLoessFile=NULL,
-                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
+                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE) {
   #' Read in the snp-pileup generated SNP read count matrix file 
   #' @importFrom utils read.csv
   #' @param filename counts file from snp-pileup
@@ -12,6 +12,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
   #' @param perl.pileup (logical) Is the pileup data generated using perl pileup tool?
   #' @param MandUnormal (logical) Is CNLR analysis to be peformed using unmatched reference normals?
   #' @param spanT (numeric) Default span value to be used for loess normalization in tumor sample.
+  #' @param unmatched (logical) is the tumor being analyzed unmatched
   #' @param spanA (numeric) Default span value to be used for loess normalization across autosomal chromosomes in the normal sample.
   #' @param spanX (numeric) Default span value to be used for loess normalization in Chr X in the normal sample.
   #' @param gbuild (character) Genome build (Default: hg19).
@@ -55,7 +56,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
           reference.pileup,
           MinOverlap,
           useMatchedX, 
-          refX
+          refX, 
+          unmatched
         )
       }
       else{
@@ -67,7 +69,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
         reference.pileup,
         MinOverlap,
         useMatchedX, 
-        refX
+        refX, 
+        unmatched
         )
       }
       return(rcmat)
