@@ -80,13 +80,15 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     normCount = length(grep("^File([3-9]|[1-9]{2,})DP$", colnames(rcmatX)))
     RefnormCount = length(grep("^RefFile([0-9]{1,})DP$", colnames(rcmatX)))
     
-    for(i in 3:(3+normCount-1)){
+    if (normCount>0){
+      for(i in 3:(3+normCount-1)){
         tempVAF = paste('File', i, "VAF", sep="")
         tempR = paste("File", i, "R", sep="")
         tempDP = paste("File", i, "DP", sep="")
         tempHET = paste("File", i, "DPhet", sep="")
         out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+      }
     }
    
     if (RefnormCount>0){
