@@ -30,12 +30,13 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     if (hasName(rcmat, "UMNX.DP")) out$umNrXCount <- rcmat$UMNX.DP
     out$vafT <- 1 - rcmat$TUM.RD/rcmat$TUM.DP
     out$vafN <- 1 - rcmat$NOR.RD/rcmat$NOR.DP
+    out$TUM.DP = rcmat$TUM.DP
     # make chromosome ordered and numeric
     out$chrom <- as.numeric(ordered(out$chrom, levels=chromlevels))
     # call a snp heterozygous if min(vafN, 1-mafN) > het.thresh
     if (unmatched) {
-        if (het.thresh == 0.25) het.thresh <- 0.1
-        out$het <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh & out$rCountT >= 50)
+        #if (het.thresh == 0.25) het.thresh <- 0.1
+        out$het <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh & out$TUM.DP >= 100)
     } else {
         out$het <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
     }
