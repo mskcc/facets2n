@@ -561,9 +561,9 @@ MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt"
   }
 }
 ######################################################################
-segmentTransplant <- function(seglist, make.plots=TRUE, sname=NULL, outdir=NULL) {
+segmentCBS <- function(seglist, make.plots=TRUE, sname=NULL, outdir=NULL) {
   
-  #' segmentTransplant takes cnlr values from all snps, segments them with CBS and the clusters the segments. Probes with distribution closest to clnr of 0 are used as null distribution for assigning p-values to segments
+  #' segmentCBS takes cnlr values from all snps, segments them with CBS and the clusters the segments. Probes with distribution closest to clnr of 0 are used as null distribution for assigning p-values to segments
   #' @importFrom DNAcopy smooth.CNA
   #' @importFrom DNAcopy segment
   #' @importFrom utils write.table
@@ -712,12 +712,20 @@ segmentTransplant <- function(seglist, make.plots=TRUE, sname=NULL, outdir=NULL)
     dev.off()
   }
   
+  cnlr.adj = (as.numeric(seg.out[,'seg.mean'])-cl0.mean)
   
   fc.segs <- sapply(as.numeric(seg.out[,'seg.mean']),function(x){
     if(is.na(x)){return(NA);}
     if(x > 0){return(2^x);}
     else{return(-2^(-x));}
   });
+  
+  fc.segs.adj <- sapply(as.numeric(seg.out[,'seg.mean']-cl0.mean),function(x){
+    if(is.na(x)){return(NA);}
+    if(x > 0){return(2^x);}
+    else{return(-2^(-x));}
+  });
+  
   zseg = (as.numeric(seg.out[,'seg.mean'])-cl0.mean)/cl0.sd;
   pseg = sapply(zseg,function(zseg.i){
     if(is.na(zseg.i)){return(NA);}
@@ -726,8 +734,10 @@ segmentTransplant <- function(seglist, make.plots=TRUE, sname=NULL, outdir=NULL)
   });	
   p.adj.seg =  p.adjust(pseg,method='BH');
   
+  
   #write a cncf-like file to be parsed segments for arm level changes 
-  seg.out.p = cbind(seg.out, fc.segs,zseg,p.adj.seg)
+  seg.out.p = cbind(seg.out, fc.segs,zseg,p.adj.seg, cnlr.adj, fc.segs.adj)
+  seg.out.p$cl0.mean = cl0.mean
   seg.out.p$nhet = NA
   seg.out.p$cnlr.mean = seg.out.p$seg.mean
   #write.table(seg.out.p,file = paste(sname,"_seg_file_with_pval.txt",sep=''),sep='\t',row.names=F,col.names=T,quote=F)
