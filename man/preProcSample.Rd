@@ -18,11 +18,12 @@ preProcSample(
   ndepthmax = 5000,
   spanT = 0.2,
   spanA = 0.2,
-  spanX = 0.2
+  spanX = 0.2,
+  donorCounts = NULL
 )
 }
 \arguments{
-\item{rcmat}{data frame with 6 required columns: Chrom, Pos, NOR.DP, NOR.RD, TUM.DP and TUM.RD. Additional variables are ignored.}
+\item{rcmat}{data frame with 6 required columns: Chrom, Pos, NOR.DP, NOR.RD, TUM.DP and TUM.RD. Additional variables are ignored. Ref and Alt columns required for transplant cases with option donorCounts.}
 
 \item{ndepth}{minimum normal sample depth to keep}
 
@@ -49,6 +50,8 @@ preProcSample(
 \item{spanA}{span value autosomes}
 
 \item{spanX}{span value X}
+
+\item{donorCounts}{snp read count matrix for donor sample(s). Required columns: Chromosome Position Ref Alt and for each donor sample,i: RefDonoriR RefDonoriA RefDonoriE RefDonoriD RefDonoriDP}
 }
 \value{
 \item{pmat}{Read counts and other elements of all the loci}

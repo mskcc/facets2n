@@ -54,7 +54,7 @@ inst/extcode/snp-pileup-wrapper.R --output-prefix P-0029502_NN_TH_PoolNormal
 library(facets2n)
 MakeLoessObject(pileup = PreProcSnpPileup(filename = "tests/standard_normals_cv3heme.snp_pileup.gz", is.Reference = TRUE), write.loess = TRUE, outfilepath = "tests/standard_normals_cv3heme.loess.txt", is.Reference = TRUE)
 ```
-#### including the argument refX=TRUE in call to readSnpMatrix() will exclude any pooled reference samples from chrX normalization (preffered). 
+#### including the argument refX=TRUE in call to readSnpMatrix() will force selection of a individual reference sample from chrX normalization (preffered). 
 ```
 readu <- readSnpMatrix(filename = "tests/P-0029502_NN_TH_PoolNormal.snp_pileup.gz",
   MandUnormal = TRUE,
@@ -122,3 +122,57 @@ dev.off()
 Results using matched normal for CNLR                     |  Results using unmatched normal for CNLR
 :--------------------------------------------------------:|:------------------------------------------------------------:
 ![matched normal cnlr](/tests/P-0029502_matched_CNLR.png) | ![unmatched normal cnlr](/tests/P-0029502_unmatched_CNLR.png)
+
+
+
+### Starting with v0.3.0, allele specific copy number with transplant cases is possible by including a seperate counts matrix for donor sample(s). Requires a baseline host sample as matched normal (e.g. nails or other source of non-neoplastic cells). 
+```
+library(facets2n)
+#read counts matrix for tumor and baseline host sample
+readu = readSnpMatrix(filename = "tests/P-0023145-TH_NN.snp_pileup.gz", MandUnormal = TRUE, ReferencePileupFile ="tests/standard_normals_cv3heme.snp_pileup.gz", ReferenceLoessFile = "tests/standard_normals_cv3heme.loess.txt", useMatchedX = FALSE, refX = TRUE)
+```
+```
+#read counts matrix for donor sample
+readonor = readSnpMatrix(filename = "tests/P-0023145-ND.snp_pileup.gz", donorCounts = TRUE)
+```
+
+```
+# preprocess sample and limit hets to those that are het in both host and donor
+xx <- preProcSample(readu$rcmat, unmatched = F,
+                    ndepth = 50,het.thresh = 0.3, ndepthmax = 5000,
+                    spanT = readu$spanT, spanA=readu$spanA, spanX = readu$spanX,
+                    MandUnormal = TRUE, donorCounts = readonor)
+```
+
+```
+oo <- procSample(xx,min.nhet = 10, cval = 150)
+dlr <- oo$dipLogR
+oo <- procSample(xx,min.nhet = 10, cval = 50, dipLogR = dlr)
+fit <- emcncf(oo, min.nhet = 10)
+
+png(filename = "tests/P-0023145_host_donor_snps.png",width = 4, height = 6, units = "in",res = 500)
+plotSample(x=oo,emfit=fit, plot.type = "both")
+dev.off()
+```
+
+```
+# running without baseline donor sample produces inaccurate logOR. allele specific copy number is not possible.
+xx <- preProcSample(readu$rcmat, unmatched = F,
+                    ndepth = 50,het.thresh = 0.25, ndepthmax = 5000,
+                    spanT = readu$spanT, spanA=readu$spanA, spanX = readu$spanX,
+                    MandUnormal = TRUE)
+
+oo <- procSample(xx,min.nhet = 10, cval = 150)
+dlr <- oo$dipLogR
+oo <- procSample(xx,min.nhet = 10, cval = 50, dipLogR = dlr)
+fit <- emcncf(oo, min.nhet = 10)
+
+png(filename = "tests/P-0023145_only_host_snps.png",width = 4, height = 6, units = "in",res = 500)
+plotSample(x=oo,emfit=fit, plot.type = "both")
+dev.off()
+```
+Results using baseline host and donor samples             |  Results using baseline donor sample only
+:--------------------------------------------------------:|:------------------------------------------------------------:
+![host and donor](/tests/P-0023145_host_donor_snps.png | ![host only](/tests/P-0023145_only_host_snps.png)
+
+

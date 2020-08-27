@@ -1,4 +1,4 @@
-procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000) {
+procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, donorCounts=NULL) {
   #' heterozygous and keep flags of the SNPs
   #' @param rcmat input counts matrix
   #' @param ndepth (numeric) minimum normal sample depth to keep
@@ -7,6 +7,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
   #' @param gbuild (character) genome build version.
   #' @param unmatched (logical)
   #' @param ndepthmax (numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
+  #' @param donorCounts count matrix of donor sample(s)
   #' @importFrom utils hasName
   #process SNPs,  keep only chromsomes 1-22 & X for humans and 1-19, X for mice
     if (gbuild %in% c("hg19", "hg38", "hg18")) {
@@ -23,6 +24,8 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     out <- list()
     out$chrom <- rcmat$Chromosome
     out$maploc <- rcmat$Position
+    out$Ref = rcmat$Ref
+    out$Alt = rcmat$Alt
     out$rCountT <- rcmat$TUM.DP
     out$rCountN <- rcmat$NOR.DP
     # if count matrix has unmatched normal as well include it
@@ -43,7 +46,30 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     # scan maploc for snps that are close to one another (within snp.nbhd bases)
     # heep all the hets (should change if too close) and only one from a nbhd
     out$keep <- scanSnp(out$maploc, out$het, snp.nbhd)
-    as.data.frame(out)
+    out = as.data.frame(out)
+    if (!is.null(donorCounts)){
+      donorcount = length(grep("^RefDonor([0-9]{1,})DP$", colnames(donorCounts)))
+      
+      dmatrix = subset(donorCounts, select=c(Chromosome, Position,Ref, Alt))
+     # dmatrix$maploc = dmatrix$Position
+      for(i in 1:donorcount){
+        
+        tempVAF = paste('RefDonor', i, "VAF", sep="")
+        tempR = paste("RefDonor", i, "R", sep="")
+        tempDP = paste("RefDonor", i, "DP", sep="")
+        tempHET = paste("RefDonor", i, "het", sep="")
+        dmatrix[,tempVAF] = 1 - (donorCounts[,tempR]/donorCounts[,tempDP])
+        dmatrix[,tempHET] =  1*(pmin(dmatrix[,tempVAF], 1-dmatrix[,tempVAF]) > het.thresh  & tempDP>=ndepth)
+      }
+      hetcols = grep("^RefDonor[0-9]{1,}het", colnames(dmatrix))
+      dhet = dmatrix[dmatrix[,c(hetcols)]==1,]
+      dhet = dhet[complete.cases(dhet),]
+      dhet$key = paste(dhet$Chromosome, dhet$Position, dhet$Ref, dhet$Alt, sep = ":")
+      out$key = paste(out$chrom, out$maploc, out$Ref, out$Alt, sep=":")
+      out = out[out[,'het']==0| out[,'het']==1 & out$key %in% dhet$key,]
+      out = subset(out, select=-c(key, Ref, Alt))
+    }
+    out
 }
 
 procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
@@ -371,7 +397,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   
     colkeep = colnames(TumorPileup.common)[grep("File([3-9]|[1-9]{2,})", colnames(TumorPileup.common))]
     combined.pileup <- cbind(
-      TumorPileup.common[,c(colkeep,"File1DP", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
+      TumorPileup.common[,c(colkeep,"Ref", "Alt","File1DP", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
       ReferencePileup.common
     )
 
@@ -447,7 +473,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   message(sprintf("Best normal for autosomes: %s\nBest normal for ChrX: %s\n",
                   best_normAuto, best_normX))
   
-  rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
+  rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "Ref", "Alt","NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
             UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]), UMNX.DP = combined.pileup[,best_normX])
   
   

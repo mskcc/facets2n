@@ -11,7 +11,8 @@ procSnps(
   snp.nbhd = 250,
   gbuild = "hg19",
   unmatched = FALSE,
-  ndepthmax = 5000
+  ndepthmax = 5000,
+  donorCounts = NULL
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ procSnps(
 \item{unmatched}{(logical)}
 
 \item{ndepthmax}{(numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.}
+
+\item{donorCounts}{count matrix of donor sample(s)}
 }
 \description{
 heterozygous and keep flags of the SNPs
