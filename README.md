@@ -171,7 +171,7 @@ png(filename = "tests/P-0023145_only_host_snps.png",width = 4, height = 6, units
 plotSample(x=oo,emfit=fit, plot.type = "both")
 dev.off()
 ```
-Results using baseline host and donor samples             |  Results using baseline donor sample only
+Results using baseline host and donor samples             |  Results using baseline host sample only
 :--------------------------------------------------------:|:------------------------------------------------------------:
 ![host and donor](/tests/P-0023145_host_donor_snps.png) | ![host only](/tests/P-0023145_only_host_snps.png)
 
