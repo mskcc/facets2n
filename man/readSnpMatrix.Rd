@@ -19,7 +19,8 @@ readSnpMatrix(
   ReferenceLoessFile = NULL,
   MinOverlap = 0.9,
   useMatchedX = FALSE,
-  refX = FALSE
+  refX = FALSE,
+  unmatched = FALSE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ readSnpMatrix(
 \item{useMatchedX}{(logical) Is the matched normal to be used for ChrX normalization?}
 
 \item{refX}{(logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix.}
+
+\item{unmatched}{(logical) is the tumor being analyzed unmatched}
 }
 \value{
 A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.

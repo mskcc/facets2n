@@ -1,4 +1,4 @@
-procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000) {
+procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, donorCounts=NULL) {
   #' heterozygous and keep flags of the SNPs
   #' @param rcmat input counts matrix
   #' @param ndepth (numeric) minimum normal sample depth to keep
@@ -7,6 +7,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
   #' @param gbuild (character) genome build version.
   #' @param unmatched (logical)
   #' @param ndepthmax (numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
+  #' @param donorCounts count matrix of donor sample(s)
   #' @importFrom utils hasName
   #process SNPs,  keep only chromsomes 1-22 & X for humans and 1-19, X for mice
     if (gbuild %in% c("hg19", "hg38", "hg18")) {
@@ -23,6 +24,8 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     out <- list()
     out$chrom <- rcmat$Chromosome
     out$maploc <- rcmat$Position
+    out$Ref = rcmat$Ref
+    out$Alt = rcmat$Alt
     out$rCountT <- rcmat$TUM.DP
     out$rCountN <- rcmat$NOR.DP
     # if count matrix has unmatched normal as well include it
@@ -30,19 +33,43 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     if (hasName(rcmat, "UMNX.DP")) out$umNrXCount <- rcmat$UMNX.DP
     out$vafT <- 1 - rcmat$TUM.RD/rcmat$TUM.DP
     out$vafN <- 1 - rcmat$NOR.RD/rcmat$NOR.DP
+    out$TUM.DP = rcmat$TUM.DP
     # make chromosome ordered and numeric
     out$chrom <- as.numeric(ordered(out$chrom, levels=chromlevels))
     # call a snp heterozygous if min(vafN, 1-mafN) > het.thresh
     if (unmatched) {
-        if (het.thresh == 0.25) het.thresh <- 0.1
-        out$het <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh & out$rCountT >= 50)
+        #if (het.thresh == 0.25) het.thresh <- 0.1
+        out$het <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh & out$TUM.DP >= 100)
     } else {
         out$het <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
     }
     # scan maploc for snps that are close to one another (within snp.nbhd bases)
     # heep all the hets (should change if too close) and only one from a nbhd
     out$keep <- scanSnp(out$maploc, out$het, snp.nbhd)
-    as.data.frame(out)
+    out = as.data.frame(out)
+    if (!is.null(donorCounts)){
+      donorcount = length(grep("^RefDonor([0-9]{1,})DP$", colnames(donorCounts)))
+      
+      dmatrix = subset(donorCounts, select=c(Chromosome, Position,Ref, Alt))
+     # dmatrix$maploc = dmatrix$Position
+      for(i in 1:donorcount){
+        
+        tempVAF = paste('RefDonor', i, "VAF", sep="")
+        tempR = paste("RefDonor", i, "R", sep="")
+        tempDP = paste("RefDonor", i, "DP", sep="")
+        tempHET = paste("RefDonor", i, "het", sep="")
+        dmatrix[,tempVAF] = 1 - (donorCounts[,tempR]/donorCounts[,tempDP])
+        dmatrix[,tempHET] =  1*(pmin(dmatrix[,tempVAF], 1-dmatrix[,tempVAF]) > het.thresh  & tempDP>=ndepth)
+      }
+      hetcols = grep("^RefDonor[0-9]{1,}het", colnames(dmatrix))
+      dhet = dmatrix[dmatrix[,c(hetcols)]==1,]
+      dhet = dhet[complete.cases(dhet),]
+      dhet$key = paste(dhet$Chromosome, dhet$Position, dhet$Ref, dhet$Alt, sep = ":")
+      out$key = paste(out$chrom, out$maploc, out$Ref, out$Alt, sep=":")
+      out = out[out[,'het']==0| out[,'het']==1 & out$key %in% dhet$key,]
+      out = subset(out, select=-c(key, Ref, Alt))
+    }
+    out
 }
 
 procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
@@ -79,13 +106,15 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     normCount = length(grep("^File([3-9]|[1-9]{2,})DP$", colnames(rcmatX)))
     RefnormCount = length(grep("^RefFile([0-9]{1,})DP$", colnames(rcmatX)))
     
-    for(i in 3:(3+normCount-1)){
+    if (normCount>0){
+      for(i in 3:(3+normCount-1)){
         tempVAF = paste('File', i, "VAF", sep="")
         tempR = paste("File", i, "R", sep="")
         tempDP = paste("File", i, "DP", sep="")
         tempHET = paste("File", i, "DPhet", sep="")
         out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+      }
     }
    
     if (RefnormCount>0){
@@ -100,6 +129,8 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     }
     
     out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
+    out$TUM.DPhet <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh)
+    
     out.hets = out[,grep("het", colnames(out))]
     out.hets = as.data.frame(colSums(out.hets, na.rm = T))
     colnames(out.hets) = "numHet"
@@ -321,7 +352,7 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
 ###########################################################################
 FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                                      ReferenceLoess=NULL, ReferencePileup=NULL,
-                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE) {
+                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE) {
   #' FindBestNormalParameters takes takes a facets2n generated tumor loess object and snp-pileup generated pileup file, and optional similar files for reference normals, and returns the pileup data for the best normal for T/N CNLR.
   #' @param TumorLoess (matrix) A facets2n generated TumorLoess matrix with header and span values in the first row.
   #' @param TumorPileup (data frame) snp-pileup generated pileup data frame with sample columns that match with the TumorLoess object.
@@ -329,6 +360,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @param ReferencePileup (data frame) A snp-pileup generated pileup data frame with sample columns that match with the ReferenceLoess object.
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
   #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
+  #' @param unmatched (logical)
   #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
@@ -365,7 +397,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   
     colkeep = colnames(TumorPileup.common)[grep("File([3-9]|[1-9]{2,})", colnames(TumorPileup.common))]
     combined.pileup <- cbind(
-      TumorPileup.common[,c(colkeep,"File1DP", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
+      TumorPileup.common[,c(colkeep,"Ref", "Alt","File1DP", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
       ReferencePileup.common
     )
 
@@ -398,8 +430,16 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
 
   #determine sex of sample and unmatched nornmals
   snpsX = procXSnps(combined.pileup, nhet=10)
-  sampleSex = snpsX["NOR.DP", "sampleSex"]
-  message("imputed patient sex: ", sampleSex)
+  
+  sampleSex ="Female"
+  if (unmatched){
+    sampleSex = snpsX["TUM.DP", "sampleSex"]
+    message("imputed patient sex from Tumor, experimental: ", sampleSex)
+  }else{
+    sampleSex = snpsX["NOR.DP", "sampleSex"]
+    message("imputed patient sex from matched normal: ", sampleSex)
+  }
+
 
   #calculate noise of tumor against normals for autosomes and ChrX seperately
   noiseAuto <- do.call('rbind',list(apply(combined.loess[-x.idx,-c(1,3), drop=F],2,function(column){
@@ -433,7 +473,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   message(sprintf("Best normal for autosomes: %s\nBest normal for ChrX: %s\n",
                   best_normAuto, best_normX))
   
-  rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
+  rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "Ref", "Alt","NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
             UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]), UMNX.DP = combined.pileup[,best_normX])
   
   
@@ -546,3 +586,187 @@ MakeLoessObject <- function(pileup, write.loess=FALSE, outfilepath="./loess.txt"
     return(pileup.select.dp.lowess)
   }
 }
+######################################################################
+segmentCBS <- function(seglist, make.plots=TRUE, sname=NULL, outdir=NULL) {
+  
+  #' segmentCBS takes cnlr values from all snps, segments them with CBS and the clusters the segments. Probes with distribution closest to clnr of 0 are used as null distribution for assigning p-values to segments
+  #' @importFrom DNAcopy smooth.CNA
+  #' @importFrom DNAcopy segment
+  #' @importFrom utils write.table
+  #' @importFrom grDevices png
+  #' @param seglist (list) list returned from preProcSample
+  #' @param make.plots (logical) make segmentation plots
+  #' @param sname (character) sample ID
+  #' @param outdir (character) directory for plotting output
+  #' @export
+
+  jointseg = seglist$jointseg
+  
+  
+  cna.obj <- CNA(jointseg$cnlr, jointseg$chrom, jointseg$maploc, data.type="logratio", sampleid=sname)
+  smoothed.cna.obj <- smooth.CNA(cna.obj)
+  segment.smoothed.cna.obj  <- segment(smoothed.cna.obj, undo.splits="sdundo", undo.SD=2, verbose=1);
+  
+  seg.out <- segment.smoothed.cna.obj$output
+  
+  logratio = jointseg$cnlr
+  names(logratio) = paste(jointseg$chrom, jointseg$maploc, sep = ":")
+  
+  seg.probes <- do.call('c',lapply(names(logratio),function(targ.i){
+    f <- unlist(strsplit(targ.i,'\\:'));
+    chr <- f[1];
+    start = as.numeric(f[2])
+    end = start
+    
+    X <- seg.out[which(seg.out[,'chrom'] == chr & !(end < as.numeric(seg.out[,'loc.start']) | start > as.numeric(seg.out[,'loc.end']))),,drop=F];
+    if(nrow(X) == 0){
+      return(NA);
+    }else if(nrow(X) == 1){
+      return(X[1,'seg.mean']);
+    }else{
+      cat("Multiple seg\t",sample.i,"\t",targ.i,"\n");
+      return(mean(as.numeric(X[,'seg.mean'])));
+    }
+  }));
+  names(seg.probes) <- names(logratio);
+  not_na.idx <- which(!is.na(seg.probes));
+  seg.probes <- seg.probes[not_na.idx];
+  
+  levelplot <- function(yvalues,grouping,title){
+    idx <- order(yvalues,decreasing=F);
+    yvalues <- yvalues[idx];
+    grouping <- grouping[idx];
+    
+    grouping[which(is.na(grouping))] <- 0;
+    num.clus <- as.numeric(unique(grouping));
+    num.clus <- num.clus[order(num.clus,decreasing=F)];
+    my.col <- rainbow(length(num.clus)-1);
+    my.col <- c('black',my.col);
+    legend.txt <- do.call('c',lapply(num.clus,function(k){
+      return(paste('Cluster ',k,sep=''));
+    }));
+    for(k in 1:length(num.clus)){
+      a1 <- yvalues;
+      a1[which(grouping!=num.clus[k])] <- NA;	
+      plot(x=1:length(yvalues),a1,col=my.col[k],
+           xlim=c(1,length(yvalues)),xlab="",
+           ylim=c(min(yvalues),max(yvalues)),ylab="");
+      par(new=T);
+    }
+    legend(x='bottomright',col=my.col,legend=legend.txt,lty=1,lwd=1.5,cex=0.8);
+    par(new=F);
+  }
+  
+  rough.clus <- function(yvalues,sep=0.1,num.steps=3,make.plot=F){
+    seg.levels <- table(yvalues);
+    seg.levels <- seg.levels[order(as.numeric(names(seg.levels)),decreasing=F)];
+    dc.clus <- do.call('c',lapply(2:length(seg.levels),function(i){
+      i.prev1 <- i-1;
+      if(i.prev1 <= 0){
+        i.prev1 <- NA;
+      } 
+      i.prev1.flag <- F;
+      if(!is.na(i.prev1)){
+        if(abs(as.numeric(names(seg.levels)[i])-as.numeric(names(seg.levels[i.prev1]))) > sep){
+          i.prev1.flag <- T;
+        }
+      }				
+      if(i.prev1.flag){				
+        return(1);
+      }else{
+        return(0);
+      }
+    }));
+    dc.clus <- c(0,dc.clus);
+    
+    clus <- 1;
+    dc.clus.names <- c();
+    for(i in 1:length(seg.levels)){		
+      if(dc.clus[i] == 1){
+        flag <- 1;
+        if(flag){
+          clus <- clus+1;
+        }
+      }
+      dc.clus.names <- c(dc.clus.names,clus);		
+    }
+    small.clusters <- names(table(dc.clus.names)[which(table(dc.clus.names) < num.steps)]);
+    dc.clus.names[which(dc.clus.names %in% small.clusters)] <- 0;
+    names(dc.clus.names) <- names(seg.levels);
+
+    ret <- do.call('c',lapply(yvalues,function(y.i){
+      return(dc.clus.names[as.character(y.i)]);
+    }));	
+    names(ret) <- names(yvalues);
+    return(ret);
+  }		
+  
+  all.clus <- rough.clus(seg.probes,sep=0.08,num.steps=3);
+  all.clus.means <- tapply(seg.probes,all.clus,mean,na.rm=T);
+  all.clus.p <- table(all.clus)/sum(table(all.clus)); #proportion of probes in cluster
+  
+  lr.clus.means <- tapply(logratio[not_na.idx],all.clus,mean,na.rm=T);
+  lr.clus.sds <- tapply(logratio[not_na.idx],all.clus,sd,na.rm=T);
+  idx <- which(names(lr.clus.means) != "0");
+  lr.clus.means <- lr.clus.means[idx];
+  lr.clus.sds <- lr.clus.sds[idx];
+  cl0 <- names(lr.clus.means)[which(abs(lr.clus.means) == min(abs(lr.clus.means)))];
+  cl0.mean <- lr.clus.means[cl0];
+  cl0.sd <- lr.clus.sds[cl0];
+  
+  if(make.plots){
+    png(filename =  paste(outdir,"/",sname,"_snp_segmentation_distributions.png",sep=''),width = 10, height = 8, units = "in",res = 500)
+    par(mfrow=c(2,2));
+    plot(seg.probes[order(seg.probes,decreasing=F)],main='Unclustered seg values',xlim=c(1,length(seg.probes)),xlab="",ylim=c(min(seg.probes),max(seg.probes)),ylab="");
+    levelplot(seg.probes, all.clus, "Clustered seg values");
+    for(clus.mean.i in all.clus.means[which(names(all.clus.means) != "0")]){
+      abline(h=clus.mean.i,lty=2);
+    }	
+    plot(density(logratio,na.rm=T),xlim=c(-2,2),ylim=c(0,1),main='Empirical LogRatio - Probes',xlab="Log2 T/N Ratio");
+    com.col <- rainbow(length(lr.clus.means));		
+    plot(density(logratio,na.rm=T),xlim=c(-2,2),ylim=c(0,1),main='Mixture Model - Probes',xlab="Log2 T/N Ratio");
+    all.clus.p <- all.clus.p[names(lr.clus.means)];
+    legend.txt <- do.call('c',lapply(1:length(lr.clus.means),function(k){
+      lines(x=seq(-2,2,0.02),y=all.clus.p[k]*dnorm(seq(-2,2,0.02),mean=lr.clus.means[k],sd=lr.clus.sds[k]),xlim=c(-2,2),ylim=c(0,1),col=com.col[k],xlab="",ylab="",type='l');
+      if(names(lr.clus.means)[k] == cl0){
+        return(paste('Fit ',names(lr.clus.means)[k],' - NULL',sep=''));
+      }else{
+        return(paste('Fit ',names(lr.clus.means)[k],sep=''));
+      }
+    }));
+    legend(x='bottomright',col=com.col,legend=legend.txt,lty=1,lwd=1.5,cex=0.8);
+    dev.off()
+  }
+  
+  cnlr.adj = (as.numeric(seg.out[,'seg.mean'])-cl0.mean)
+  
+  fc.segs <- sapply(as.numeric(seg.out[,'seg.mean']),function(x){
+    if(is.na(x)){return(NA);}
+    if(x > 0){return(2^x);}
+    else{return(-2^(-x));}
+  });
+  
+  fc.segs.adj <- sapply(as.numeric(seg.out[,'seg.mean']-cl0.mean),function(x){
+    if(is.na(x)){return(NA);}
+    if(x > 0){return(2^x);}
+    else{return(-2^(-x));}
+  });
+  
+  zseg = (as.numeric(seg.out[,'seg.mean'])-cl0.mean)/cl0.sd;
+  pseg = sapply(zseg,function(zseg.i){
+    if(is.na(zseg.i)){return(NA);}
+    if(zseg.i <= 0){ return(2*pnorm(zseg.i,mean=0,sd=1));}
+    else{ return(2*(1-pnorm(zseg.i,mean=0,sd=1)));}		
+  });	
+  p.adj.seg =  p.adjust(pseg,method='BH');
+  
+  
+  #write a cncf-like file to be parsed segments for arm level changes 
+  seg.out.p = cbind(seg.out, fc.segs,zseg,p.adj.seg, cnlr.adj, fc.segs.adj)
+  seg.out.p$cl0.mean = cl0.mean
+  seg.out.p$nhet = NA
+  seg.out.p$cnlr.mean = seg.out.p$seg.mean
+  #write.table(seg.out.p,file = paste(sname,"_seg_file_with_pval.txt",sep=''),sep='\t',row.names=F,col.names=T,quote=F)
+  seg.out.p
+}
+

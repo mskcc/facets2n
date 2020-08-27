@@ -11,7 +11,8 @@ FindBestNormalParameters(
   ReferencePileup = NULL,
   MinOverlap = 0.9,
   useMatchedX = FALSE,
-  refX = FALSE
+  refX = FALSE,
+  unmatched = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ FindBestNormalParameters(
 \item{useMatchedX}{(logical) Force select matched normal for normalization in ChrX.}
 
 \item{refX}{(logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix.}
+
+\item{unmatched}{(logical)}
 }
 \value{
 A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
