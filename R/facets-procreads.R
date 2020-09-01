@@ -51,7 +51,6 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
       donorcount = length(grep("^RefDonor([0-9]{1,})DP$", colnames(donorCounts)))
       
       dmatrix = subset(donorCounts, select=c(Chromosome, Position,Ref, Alt))
-     # dmatrix$maploc = dmatrix$Position
       for(i in 1:donorcount){
         
         tempVAF = paste('RefDonor', i, "VAF", sep="")
@@ -64,9 +63,12 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
       hetcols = grep("^RefDonor[0-9]{1,}het", colnames(dmatrix))
       dhet = dmatrix[dmatrix[,c(hetcols)]==1,]
       dhet = dhet[complete.cases(dhet),]
+      write.table(dhet, file="baseline_donor_hetsnps.txt", sep = "\t", row.names=FALSE, quote=FALSE)
       dhet$key = paste(dhet$Chromosome, dhet$Position, dhet$Ref, dhet$Alt, sep = ":")
       out$key = paste(out$chrom, out$maploc, out$Ref, out$Alt, sep=":")
-      out = out[out[,'het']==0| out[,'het']==1 & out$key %in% dhet$key,]
+      write.table(out, file="baseline_host_snps.txt", sep = "\t", row.names=FALSE, quote=FALSE)
+      out$het = ifelse(out$het==1 & out$key %in% dhet$key, 1, 0)
+      write.table(out, file="sample_snps_donor_filtered.txt", sep = "\t", row.names=FALSE, quote=FALSE)
       out = subset(out, select=-c(key, Ref, Alt))
     }
     out
