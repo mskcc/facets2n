@@ -12,7 +12,7 @@ procXSnps(
   gbuild = "hg19",
   unmatched = FALSE,
   ndepthmax = 5000,
-  nhet = 10
+  phet = 0.01
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ procXSnps(
 
 \item{ndepthmax}{(numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.}
 
-\item{nhet}{(numeric) minimum number of heterzygous SNPs to classify sample as Female}
+\item{phet}{(numeric) proportion heterzygous chrX SNPs to classify sample as Female}
 }
 \value{
 output a table of samples analyzed and imputed sex.

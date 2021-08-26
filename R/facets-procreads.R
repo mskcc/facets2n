@@ -139,19 +139,17 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
         out[,tempDP] = rcmatX[,tempDP] 
       }
     }
-    # scan maploc for snps that are close to one another (within snp.nbhd bases)
-    # heep all the hets (should change if too close) and only one from a nbhd
     out = out[out[,'keep']==1,]
     
     samples = colnames(out)[grep("DP$", colnames(out))]
     out.hets = NULL
     for(i in samples){
-      #sample.snps = out[out[,i]>ndepth,]
+      #out = out[out[,i]>ndepth,]
       index =paste0(i, "_nhet")
-      sumhets = as.data.frame(aggregate(sample.snps[,index] ~ sample.snps[,'chrom'], FUN=sum)[[2]])
+      sumhets = as.data.frame(aggregate(out[,index] ~ out[,'chrom'], FUN=sum)[[2]])
       colnames(sumhets) =  "numHet"
       
-      countsnp =  as.data.frame(dim(sample.snps)[1])
+      countsnp =  as.data.frame(dim(out)[1])
       colnames(countsnp) = "num.mark"
       
       row = as.data.frame(c(sumhets, countsnp))
@@ -165,6 +163,13 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
 }
 
 scanSnp <- function(maploc, het, nbhd) {
+  #' scan maploc for snps that are close to one another (within snp.nbhd bases)
+  #' keep all the hets (should change if too close) and only one from a nbhd
+  #' @param maploc (numeric) chrom genomic mapping position
+  #' @param het (numeric) binary heterozygous status of position
+  #' @param nbhd (numeric) window size, bp
+  #' @return a vector of snp positions to keep
+  #' @export
     n <- length(maploc)
     zzz <- .Fortran("scansnp",
                     as.integer(n),
