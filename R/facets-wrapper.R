@@ -82,7 +82,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
       return(rcmat)
     }
     else {
-      rcmat <- subset(tumor.pileup, select=c(Chromosome, Position, File1DP, File1R, File2DP, File2R))
+      rcmat <- subset(tumor.pileup, select=c(Chromosome, Position, Ref, Alt, File1DP, File1R, File2DP, File2R))
       colnames(rcmat) <- c("Chromosome", "Position","Ref","Alt", "NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")
       return(rcmat)
     }
