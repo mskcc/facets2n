@@ -74,7 +74,7 @@ procSnps <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg
     out
 }
 
-procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, nhet=10) {
+procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19", unmatched=FALSE, ndepthmax=5000, phet=0.01) {
   #' Takes a snp-pileup file and determines sex of sample and any unmatched normals based on number of chrX het SNPs, as males should not have het X
   #' @param pileup (character) A snp-pileup generated pileup file that has been analyzed with readSnpMatrix(). Expect columns "Chromosome", "Position", "NOR.DP", "NOR.RD", "TUM.DP", and "TUM.RD". Can be a pileup file that has been merged with common loci of reference normals processed with PreProcSnpPileup()
   #' @param ndepth (numeric) minimum normal sample depth to keep
@@ -83,7 +83,7 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
   #' @param gbuild (character) genome build version.
   #' @param unmatched (logical)
   #' @param ndepthmax (numeric) loci for which normal coverage exceeds this number (default is 5000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
-  #' @param nhet (numeric) minimum number of heterzygous SNPs to classify sample as Female
+  #' @param phet (numeric) proportion heterzygous chrX SNPs to classify sample as Female
   #' @return output a table of samples analyzed and imputed sex.
   #' @export
 
@@ -99,46 +99,68 @@ procXSnps <- function(pileup, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="
     out$maploc <- rcmatX$Position
 
 
-    out$rCountT <- rcmatX$TUM.DP
-    out$rCountN <- rcmatX$NOR.DP
+    out$TUM.DP <- rcmatX$TUM.DP
+    out$NOR.DP <- rcmatX$NOR.DP
     out$vafT <- 1 - rcmatX$TUM.RD/rcmatX$TUM.DP
     out$vafN <- 1 - rcmatX$NOR.RD/rcmatX$NOR.DP
     out = as.data.frame(out)
-
+    
     normCount = length(grep("^File([3-9]|[1-9]{2,})DP$", colnames(rcmatX)))
     RefnormCount = length(grep("^RefFile([0-9]{1,})DP$", colnames(rcmatX)))
     
     if (normCount>0){
       for(i in 3:(3+normCount-1)){
-        tempVAF = paste('File', i, "VAF", sep="")
-        tempR = paste("File", i, "R", sep="")
-        tempDP = paste("File", i, "DP", sep="")
-        tempHET = paste("File", i, "DPhet", sep="")
+        name = paste0('File', i)
+        tempVAF = paste0(name, "VAF")
+        tempR = paste0(name, "R")
+        tempDP = paste0(name, "DP")
+        tempHET = paste0(tempDP, "_nhet")
+  
         out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+        out[,tempDP] = rcmatX[,tempDP] 
       }
     }
-   
+    out$NOR.DP_nhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
+    out$TUM.DP_nhet <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh)
+    
+    out$keep <- scanSnp(out$maploc, out$NOR.DP_nhet, snp.nbhd)
+ 
     if (RefnormCount>0){
       for(i in 1:RefnormCount){
-        tempVAF = paste('RefFile', i, "VAF", sep="")
-        tempR = paste("RefFile", i, "R", sep="")
-        tempDP = paste("RefFile", i, "DP", sep="")
-        tempHET = paste("RefFile", i, "DPhet", sep="")
+        name = paste0("RefFile", i)
+        tempVAF = paste0(name, "VAF")
+        tempR = paste0(name, "R")
+        tempDP = paste0(name, "DP")
+        tempHET = paste0(tempDP, "_nhet")
+        
         out[,tempVAF] = 1 - (rcmatX[,tempR]/rcmatX[,tempDP])
         out[,tempHET] =  1*(pmin(out[,tempVAF], 1-out[,tempVAF]) > het.thresh )
+        out[,tempDP] = rcmatX[,tempDP] 
       }
     }
+    # scan maploc for snps that are close to one another (within snp.nbhd bases)
+    # heep all the hets (should change if too close) and only one from a nbhd
+    out = out[out[,'keep']==1,]
     
-    out$NOR.DPhet <- 1*(pmin(out$vafN, 1-out$vafN) > het.thresh)
-    out$TUM.DPhet <- 1*(pmin(out$vafT, 1-out$vafT) > het.thresh)
+    samples = colnames(out)[grep("DP$", colnames(out))]
+    out.hets = NULL
+    for(i in samples){
+      #sample.snps = out[out[,i]>ndepth,]
+      index =paste0(i, "_nhet")
+      sumhets = as.data.frame(aggregate(sample.snps[,index] ~ sample.snps[,'chrom'], FUN=sum)[[2]])
+      colnames(sumhets) =  "numHet"
+      
+      countsnp =  as.data.frame(dim(sample.snps)[1])
+      colnames(countsnp) = "num.mark"
+      
+      row = as.data.frame(c(sumhets, countsnp))
+      out.hets = rbind(out.hets, row)
+    }
+    row.names(out.hets) = samples 
+    out.hets$pHet  = out.hets$numHet / out.hets$num.mark
+    out.hets$sampleSex = ifelse(out.hets$pHet>phet,"Female", "Male")
     
-    out.hets = out[,grep("het", colnames(out))]
-    out.hets = as.data.frame(colSums(out.hets, na.rm = T))
-    colnames(out.hets) = "numHet"
-    out.hets$sampleSex = ifelse(out.hets$numHet>nhet,"Female", "Male")
-    rownames(out.hets) = gsub("het", "", rownames(out.hets))
-
     out.hets
 }
 
@@ -431,7 +453,7 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   x.idx.values <- as.vector(grep('^X\\:', combined.loess$key, value = T))
 
   #determine sex of sample and unmatched nornmals
-  snpsX = procXSnps(combined.pileup, nhet=10)
+  snpsX = procXSnps(combined.pileup, phet=0.01)
   
   sampleSex ="Female"
   if (unmatched){
