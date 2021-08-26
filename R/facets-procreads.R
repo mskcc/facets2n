@@ -485,10 +485,12 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   else {
     #limit normals for X normalization to those matching patient sex
     combined.loess.useX = row.names(snpsX[which(snpsX$sampleSex==sampleSex),])
-    if(refX){
-      combined.loess.useX = combined.loess.useX[grep("NOR.DP|^RefFile", combined.loess.useX)]
-    }
     combined.loess.useX = gsub("NOR.DP", "File1DP", combined.loess.useX)
+    if(refX){
+      combined.loess.useX = combined.loess.useX[grep("File1DP|^RefFile", combined.loess.useX)]
+    }else{
+      combined.loess.useX = combined.loess.useX[grep("^File|^RefFile", combined.loess.useX)]
+    }
 
     noiseX <- do.call('rbind',list(apply(subset(combined.loess[x.idx,-c(1,3), drop=F],select = c(combined.loess.useX)),2,function(column){
       lr = log2(as.numeric(levels(combined.loess[x.idx,3]))[combined.loess[x.idx,3]]) -
