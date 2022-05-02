@@ -1,8 +1,8 @@
 Package: facets2n
 Type: Package
 Title: Cellular Faction and Copy Numbers from Tumor Sequencing
-Version: 0.3.2
-Date: 2022-05-01
+Version: 0.3.3
+Date: 2022-05-02
 Author: Ryan Ptashkin (facets2n), Venkatraman E. Seshan and Ronglai Shen (facets)
 Maintainer: Ryan Ptashkin <ptashkir@mskcc.org>
 Description: Algorithm to implement Fraction and Allelic Copy number
@@ -11,7 +11,7 @@ License: GPL (>= 2)
 Depends: R (>= 3.4.0), pctGCdata (>= 0.3.0), DNAcopy (>= 1.60.0)
 Remotes: veseshan/pctGCdata
 NeedsCompilation: yes
-Packaged: 2021-08-25 22:07:33 EST; rptashkin
+Packaged: 2022-05-02 16:14:24 EST; rptashkin
 Encoding: UTF-8
 RoxygenNote: 7.0.2
 Roxygen: list(markdown = TRUE)
