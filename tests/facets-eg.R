@@ -15,9 +15,6 @@ datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 # read the data
 rcmat = readSnpMatrix(datafile)
 
-#test reading a counts file as donor counts
-readonor = readSnpMatrix(filename = "tests/P-0023145-ND.snp_pileup.gz", donorCounts = TRUE)
-
 # fit segmentation tree
 xx = preProcSample(rcmat)
 # estimate allele specific copy numbers
@@ -35,7 +32,7 @@ set.seed(0xfade)
 #test transplant case with baseline donor sample
 transplantFile = system.file("extdata", "transplant.csv.gz", package="facets2n")
 normalsFile = system.file("extdata", "test_standard_normals.csv.gz", package="facets2n")
-loessFile = system.file("extdata", "inst/extdata/test_standard_normals.loess.txt", package="facets2n")
+loessFile = system.file("extdata", "test_standard_normals.loess.txt", package="facets2n")
 
 readu = readSnpMatrix(transplantFile, MandUnormal = TRUE, ReferencePileupFile = normalsFile, ReferenceLoessFile = loessFile, useMatchedX = FALSE, refX = TRUE)
 
