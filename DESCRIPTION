@@ -14,3 +14,6 @@ NeedsCompilation: yes
 Packaged: 2021-08-25 22:07:33 EST; rptashkin
 Encoding: UTF-8
 RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
+Imports: 
+    lifecycle
