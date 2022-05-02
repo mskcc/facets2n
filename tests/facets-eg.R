@@ -11,7 +11,7 @@ if(seedexists) oldSeed <- .Random.seed
 set.seed(0xfade)
 
 # running the stomach example in the vignette 
-datafile = system.file("extdata", "stomach.csv.gz", package="facets")
+datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 # read the data
 rcmat = readSnpMatrix(datafile)
 # fit segmentation tree
