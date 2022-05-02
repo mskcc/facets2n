@@ -42,12 +42,13 @@ jobs:
       
       - name: Query R package dependencies
         run: |
-          install.packages('remotes', repos='http://cran.rstudio.com')
-          
+          install.packages(c('remotes', 'BiocManager'), repos='http://cran.rstudio.com')
+          BiocManager::install(update = FALSE)
         shell: Rscript {0}
 
       - name: Install R package dependencies
         run: |
+          BiocManager::install("DNAcopy", update=FALSE)
           remotes::install_deps(dependencies = TRUE,upgrade = "never")
         shell: Rscript {0}
 
