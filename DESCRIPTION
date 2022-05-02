@@ -9,7 +9,7 @@ Description: Algorithm to implement Fraction and Allelic Copy number
              Estimate from Tumor/normal Sequencing with both matched and unmatched normal(s).
 License: GPL (>= 2)
 Depends: R (>= 3.4.0), pctGCdata (>= 0.3.0), DNAcopy (>= 1.60.0)
-Remotes: veseshan/pctGCdata
+Remotes: veseshan/pctGCdata, bioc::DNAcopy
 NeedsCompilation: yes
 Packaged: 2021-08-25 22:07:33 EST; rptashkin
 Encoding: UTF-8
