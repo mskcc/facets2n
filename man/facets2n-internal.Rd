@@ -24,8 +24,8 @@
 \usage{
 jointsegsummary(jointseg)
 procSnps(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, gbuild="hg19",
-unmatched=FALSE, ndepthmax=1000)
-counts2logROR(mat, gbuild, unmatched=FALSE, f=0.2)
+unmatched=FALSE, ndepthmax=5000, donorCounts = NULL)
+counts2logROR(mat, gbuild, unmatched=FALSE, MandUnormal = FALSE, f, spanT, spanA, spanX)
 scanSnp(maploc, het, nbhd)
 fit.cpt.tree(genomdat, edgelim=10, cval=25, hscl=1, delta=0)
 prune.cpt.tree(seg.tree, cval=25)

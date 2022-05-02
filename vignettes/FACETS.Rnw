@@ -71,7 +71,7 @@ code. In the included data the ref and alt alleles were replaced with ``N'' and
 random noise added to the SNP positions to deidentify the case. \\
 
 <<echo=TRUE,print=FALSE>>=
-datafile = system.file("extdata", "stomach.csv.gz", package="facets")
+datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 head(read.csv(datafile)[,c(1:2,5:12)])
 @ 
 
@@ -113,7 +113,7 @@ set/saved for reproducible results.
 
 <<echo=TRUE,print=FALSE>>=
 set.seed(1234)
-datafile = system.file("extdata", "stomach.csv.gz", package="facets")
+datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 rcmat = readSnpMatrix(datafile)
 xx = preProcSample(rcmat)
 @ 

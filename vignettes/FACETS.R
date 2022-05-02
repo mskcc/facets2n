@@ -4,7 +4,7 @@
 ###################################################
 ### code chunk number 1: FACETS.Rnw:73-75
 ###################################################
-datafile = system.file("extdata", "stomach.csv.gz", package="facets")
+datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 head(read.csv(datafile)[,c(1:2,5:12)])
 
 
@@ -18,7 +18,7 @@ library(facets2n)
 ### code chunk number 3: FACETS.Rnw:114-118
 ###################################################
 set.seed(1234)
-datafile = system.file("extdata", "stomach.csv.gz", package="facets")
+datafile = system.file("extdata", "stomach.csv.gz", package="facets2n")
 rcmat = readSnpMatrix(datafile)
 xx = preProcSample(rcmat)
 
