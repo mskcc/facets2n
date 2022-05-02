@@ -33,13 +33,13 @@ emcncf2(
 \item{eps}{(numeric) the convergence threshold}
 }
 \value{
-A list containing: \item{loglik}{loglikelihood value of the fitted model} 
+A list containing: \item{loglik}{loglikelihood value of the fitted model}
 \item{purity}{fraction tumor cells in the tumor sample}
 \item{ploidy}{average total copy number of the tumor cells}
 \item{dipLogR}{estimated logR value of diploid segments}
-\item{cncf}{dataframe consisting of the columns of segmentation output 
+\item{cncf}{dataframe consisting of the columns of segmentation output
 as well as cellular fraction (cf), total (tcn) and lesser (lcn) copy number of each segment
-and their em counterpart (with .em suffix), and a clonal.cluster indicater with 
+and their em counterpart (with .em suffix), and a clonal.cluster indicater with
 clonal.cluster=1 indicating the clonal cluster and a higher number (2,3, etc..) indicating subclonal clusters.}
 }
 \description{

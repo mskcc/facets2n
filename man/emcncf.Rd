@@ -28,12 +28,12 @@ emcncf(
 }
 \value{
 A list containing: \item{loglik}{loglikelihood value of the fitted model}
- \item{purity}{fraction tumor cells in the tumor sample}
- \item{ploidy}{average total copy number of the tumor cells} 
- \item{dipLogR}{estimated logR value of diploid segments} 
- \item{cncf}{dataframe consisting of the columns of segmentation output as well as 
-  cellular fraction (cf), total (tcn) and lesser (lcn) copy number of each segment 
-  and their em counterpart (with .em suffix)}
+\item{purity}{fraction tumor cells in the tumor sample}
+\item{ploidy}{average total copy number of the tumor cells}
+\item{dipLogR}{estimated logR value of diploid segments}
+\item{cncf}{dataframe consisting of the columns of segmentation output as well as
+cellular fraction (cf), total (tcn) and lesser (lcn) copy number of each segment
+and their em counterpart (with .em suffix)}
 }
 \description{
 Uses genotype mixture model to estimate the cluster specific copy number and cellular fraction. Uses estimates based on the cnlr.median and mafR as initial values for the EM iteration.
