@@ -1,18 +1,16 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/master/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
-on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+on: [push, pull_request]
 
 name: test-coverage
 
 jobs:
   test-coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      RSPM: https://packagemanager.rstudio.com/cran/__linux__/focal/latest
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
 
     steps:
       - uses: actions/checkout@v2
@@ -32,5 +30,11 @@ jobs:
           extra-packages: covr
 
       - name: Test coverage
-        run: covr::codecov()
+        ##  set 'CODECOV_TOKEN' in GitHub Secrets:
+        ##    https://github.com/<org>/<repo>/settings/environments/
+        
+        run: |
+          coverage <- covr::package_coverage()
+          print(coverage)
+          covr::codecov(coverage = coverage, token="${{secrets.CODECOV_TOKEN}}")
         shell: Rscript {0}
