@@ -49,7 +49,7 @@ xxx <- preProcSample(readu$rcmat, unmatched = F,
 
 ooo <- procSample(xxx,min.nhet = 10, cval = 150)
 dlr <- ooo$dipLogR
-ooo <- procSample(xx,min.nhet = 10, cval = 50, dipLogR = dlr)
+ooo <- procSample(xxx,min.nhet = 10, cval = 50, dipLogR = dlr)
 fit <- emcncf(ooo, min.nhet = 10)
 
 # Reset to previous random seed
