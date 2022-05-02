@@ -180,7 +180,7 @@ scanSnp <- function(maploc, het, nbhd) {
     zzz$keep
 }
 
-counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f=0.2, spanT, spanA, spanX) {
+counts2logROR <- function(mat, gbuild, unmatched=FALSE, MandUnormal=FALSE, f, spanT, spanA, spanX) {
   #' obtain logR and logOR from read counts and GC-correct logR
   #' @param mat input data
   #' @param gbuild e.g. "hg19"
