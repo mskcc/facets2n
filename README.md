@@ -1,4 +1,9 @@
 # facets2n
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/rptashkin/facets2n/workflows/R-CMD-check/badge.svg)](https://github.com/rptashkin/facets2n/actions)
+[![Codecov test coverage](https://codecov.io/gh/rptashkin/facets2n/branch/master/graph/badge.svg)](https://app.codecov.io/gh/rptashkin/facets2n?branch=master)
+<!-- badges: end -->
+
 Algorithm to implement Fraction and Allelic Copy number Estimate from Tumor/normal Sequencing. Package created to test FACETS with both matched and unmatched normal.
 
 This implementation of FACETS requires a tumor sample, matched normal and user defined number of unmatched normal samples. 
