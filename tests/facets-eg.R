@@ -21,6 +21,10 @@ xx = preProcSample(rcmat)
 oo=procSample(xx,cval=150)
 # EM fit version 1
 fit=emcncf(oo)
+
+#check fit with logRlogOR spider plot
+logRlogORspider(cncf = fit$cncf)
+
 # EM fit version 2
 fit2=emcncf2(oo)
 # finished
