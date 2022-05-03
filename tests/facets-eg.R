@@ -52,5 +52,7 @@ dlr <- ooo$dipLogR
 ooo <- procSample(xxx,min.nhet = 10, cval = 50, dipLogR = dlr)
 fit <- emcncf(ooo, min.nhet = 10)
 
+plotSample(x=ooo,emfit=fit, plot.type = "both")
+
 # Reset to previous random seed
 if(seedexists) .Random.seed <- oldSeed
