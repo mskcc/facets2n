@@ -14,9 +14,13 @@ plotSample(
 }
 \arguments{
 \item{x}{(character) output from procSample}
+
 \item{emfit}{(character) output of emcncf}
+
 \item{clustered}{(logical) indicator of whether segment or cluster summary plotted}
+
 \item{plot.type}{(character) the type of plot. The default is em in which the logR and logOR data as well as the copy number and cellular fraction fits from EM are graphed. For naive the naive copy number and cellular fraction fits are used instead of EM. For none only the data are shown and for both both fits are shown}
+
 \item{sname}{(character) sample name give as a character string}
 }
 \description{
