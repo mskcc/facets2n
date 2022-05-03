@@ -56,7 +56,14 @@ dlr <- ooo$dipLogR
 ooo <- procSample(xxx,min.nhet = 10, cval = 50, dipLogR = dlr)
 fit <- emcncf(ooo, min.nhet = 10)
 
+#testing plot functions
 plotSample(x=ooo,emfit=fit, plot.type = "both")
+plotSample(x=ooo,emfit=fit, plot.type = "both", clustered = TRUE)
+plotSample(x=ooo,emfit=fit, plot.type = "em")
+plotSample(x=ooo,plot.type = "em")
+plotSample(x=ooo,emfit=fit, plot.type = "naive")
+plotSample(x=ooo,emfit=fit, plot.type = "none")
+# finished
 
 # Reset to previous random seed
 if(seedexists) .Random.seed <- oldSeed
