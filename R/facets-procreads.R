@@ -395,13 +395,13 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @export
 
   TumorLoess.span <- TumorLoess[1,]
-  TumorLoess <- as.data.frame(TumorLoess[-1,])
+  TumorLoess <- as.data.frame(TumorLoess[-1,], stringsAsFactors=TRUE)
   colnames(TumorLoess)[1] <- "key"
 
   if (!is.null(ReferencePileup)) {
    
     ReferenceLoess.span <- ReferenceLoess[1,]
-    ReferenceLoess <- as.data.frame(ReferenceLoess[-1,])
+    ReferenceLoess <- as.data.frame(ReferenceLoess[-1,],stringsAsFactors=TRUE)
     colnames(ReferenceLoess)[1] <- "key"
 
     common.loci <- intersect(ReferenceLoess$key, TumorLoess$key)
