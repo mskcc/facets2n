@@ -100,7 +100,7 @@ preProcSample <- function(rcmat, ndepth=35, het.thresh=0.25, snp.nbhd=250, cval=
 #' @param cval critical value for segmentation
 #' @param deltaCN minimum detectable difference in CN from diploid state
 #' @param gbuild genome build used for the alignment of the genome. Default value is human genome build hg19. Other possibilities are hg38 & hg18 for human and mm9 & mm10 for mouse. Chromosomes used for analysis are 1-22, X for humans and 1-19 for mouse. Option udef can be used to analyze other genomes.
-#' @param hetscale (logical) variable to indicate if logOR should get more weight in the test statistics for segmentation and clustering. Usually only 10\% of snps are hets and hetscale gives the logOR contribution to T-square as 0.25/proportion of hets.
+#' @param hetscale (logical) variable to indicate if logOR should get more weight in the test statistics for segmentation and clustering. Usually only 10 % of snps are hets and hetscale gives the logOR contribution to T-square as 0.25/proportion of hets.
 #' @param unmatched indicator of whether the normal sample is unmatched. When this is TRUE hets are called using tumor reads only and logOR calculations are different. Use het.thresh = 0.1 or lower when TRUE.
 #' @param ndepthmax loci for which normal coverage exceeds this number (default is 1000) will be discarded as PCR duplicates. Fof high coverage sample increase this and ndepth commensurately.
 #' @param MandUnormal analyzing both matched and unmatched normal for log ratio normalization
@@ -211,6 +211,11 @@ plotSample <- function(x, emfit=NULL, clustered=FALSE, plot.type=c("em","naive",
   #' Plot the data and results for a single sample
   #' @description Plots copy number log-ratio, variant allele log-odds ratio as well as the copy number and cellular fraction fits.
   #' @importFrom grDevices colorRampPalette
+  #' @param x (character) output from procSample
+  #' @param emfit (character) output of emcncf
+  #' @param clustered (logical) indicator of whether segment or cluster summary plotted
+  #' @param plot.type (character) the type of plot. The default is em in which the logR and logOR data as well as the copy number and cellular fraction fits from EM are graphed. For naive the naive copy number and cellular fraction fits are used instead of EM. For none only the data are shown and for both both fits are shown
+  #' @param sname (character) sample name give as a character string
   #' @export
   def.par <- par(no.readonly = TRUE) # save default, for resetting...
   # plot.type
