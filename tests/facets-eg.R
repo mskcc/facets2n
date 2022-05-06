@@ -34,14 +34,18 @@ if(seedexists) .Random.seed <- oldSeed
 set.seed(0xfade)
 
 #test transplant case with baseline donor sample
+
 transplantFile = system.file("extdata", "transplant.snp_pileup.gz", package="facets2n")
 normalsFile = system.file("extdata", "reference_normals.snp_pileup.gz", package="facets2n")
 loessFile = system.file("extdata", "reference_normals.loess.txt", package="facets2n")
 
+
 readu = readSnpMatrix(transplantFile, MandUnormal = TRUE, ReferencePileupFile = normalsFile, ReferenceLoessFile = loessFile, useMatchedX = FALSE, refX = TRUE)
 
 #read counts matrix for donor sample
+
 donorFile = system.file("extdata", "donor.snp_pileup.gz", package="facets2n")
+
 readonor = readSnpMatrix(donorFile, donorCounts = TRUE)
 
 
