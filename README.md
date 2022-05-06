@@ -74,7 +74,8 @@ Reference files only need to be generated once for a given sequencing assay and 
 ##### (1a) Reference snp-pileup
 
 ```
-inst/extcode/snp-pileup-wrapper.R --output-prefix reference_normals  \
+inst/extcode/snp-pileup-wrapper.R \
+  --output-prefix reference_normals  \
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf \
   --unmatched-normal-BAMS "<some/path_to_bam_directory>/*-N*.bam"
 ```
@@ -83,7 +84,11 @@ inst/extcode/snp-pileup-wrapper.R --output-prefix reference_normals  \
 
 ```
 library(facets2n)
-MakeLoessObject(pileup = PreProcSnpPileup(filename = "inst/extdata/reference_normals.snp_pileup.gz", is.Reference = TRUE), write.loess = TRUE, outfilepath = "inst/extdata/reference_normals.loess.txt", is.Reference = TRUE)
+MakeLoessObject(pileup = PreProcSnpPileup(filename = "inst/extdata/reference_normals.snp_pileup.gz", 
+  is.Reference = TRUE), 
+  write.loess = TRUE,
+  outfilepath = "inst/extdata/reference_normals.loess.txt", is.Reference = TRUE)
+  
 ```
 
 
@@ -162,7 +167,10 @@ dev.off()
 
 ```
 <br/><br/>
-![qc-fit](/tests/pngs/QC_Fit.png.png)
+![qc-fit](/tests/pngs/QC_Fit.png)
+
+*The segment summaries are plotted as circles where the size of the circle increases with the number of loci in the segment. The expected value for various integer copy number states are drawn as curves for purity ranging from 0 to 0.95. For a good fit, the segment summaries should be close to one of the lines.*
+
 <br/><br/>
 Side by side Comparison of using matched vs unmatched normal for logR calculations:
 
@@ -181,9 +189,11 @@ Side by side Comparison of using matched vs unmatched normal for logR calculatio
 ```
 #example
 
-inst/extcode/snp-pileup-wrapper.R --output-prefix donor  \
+inst/extcode/snp-pileup-wrapper.R \
+  --output-prefix donor  \
   --vcf-file dbsnp_137.hg19__RmDupsClean__plusPseudo50__DROP_SORT_NOCHR.vcf \
   --unmatched-normal-BAMS "<some/path_to_bam_directory>/donor_sample.bam"
+  
 ```
 
 #### (2) Analyze and plot
