@@ -38,10 +38,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - uses: r-lib/actions/setup-tinytex@v1
+      - uses: r-lib/actions/setup-tinytex@master
       - run: |
           tlmgr --version
           tlmgr install ae  ## Needed by vignette
+          tlmgr install grfext
           tlmgr list --only-installed
       
       - uses: r-lib/actions/setup-pandoc@v2
