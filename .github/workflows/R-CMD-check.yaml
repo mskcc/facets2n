@@ -42,6 +42,7 @@ jobs:
       - run: |
           tlmgr --version
           tlmgr install ae  ## Needed by vignette
+          tlmgr install grfext
           tlmgr list --only-installed
       
       - uses: r-lib/actions/setup-pandoc@v2
