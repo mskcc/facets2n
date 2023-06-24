@@ -1,4 +1,4 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/master/examples
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 on:
   push:
     branches: [main, master, develop]
@@ -36,7 +36,7 @@ jobs:
       _R_CHECK_MATRIX_DATA_: true
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - uses: r-lib/actions/setup-tinytex@v2
       - run: |
