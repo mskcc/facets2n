@@ -381,7 +381,8 @@ PreProcSnpPileup <- function(filename, err.thresh=Inf, del.thresh=Inf,
 ###########################################################################
 FindBestNormalParameters <- function(TumorLoess, TumorPileup,
                                      ReferenceLoess=NULL, ReferencePileup=NULL,
-                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE) {
+                                     MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE,
+                                     normal.logfile=NULL) {
   #' FindBestNormalParameters takes takes a facets2n generated tumor loess object and snp-pileup generated pileup file, and optional similar files for reference normals, and returns the pileup data for the best normal for T/N CNLR.
   #' @param TumorLoess (matrix) A facets2n generated TumorLoess matrix with header and span values in the first row.
   #' @param TumorPileup (data frame) snp-pileup generated pileup data frame with sample columns that match with the TumorLoess object.
@@ -390,7 +391,8 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
   #' @param MinOverlap (numeric) A numeric between 0 and 1 that denotes the fraction overlap of loci between TumorLoess and the optional ReferenceLoess
   #' @param useMatchedX (logical) Force select matched normal for normalization in ChrX.
   #' @param unmatched (logical)
-  #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
+  #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix.
+  #' @param normal.logfile (character) Optional filepath. If provided, the normal selected for the autosomes and for ChrX is written to this file (tab-separated, one row per region).
   #' @return A list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
 
@@ -503,7 +505,26 @@ FindBestNormalParameters <- function(TumorLoess, TumorPileup,
 
   message(sprintf("Best normal for autosomes: %s\nBest normal for ChrX: %s\n",
                   best_normAuto, best_normX))
-  
+
+  # Log which normal was selected for each region (autosomes / ChrX) to a file.
+  # Only reached when unmatched/reference normals are in play (MandUnormal path).
+  if (!is.null(normal.logfile)) {
+    normal.selection <- data.frame(
+      region = c("autosomes", "chrX"),
+      normal = c(best_normAuto, best_normX),
+      stringsAsFactors = FALSE
+    )
+    tryCatch({
+      write.table(normal.selection, file = normal.logfile, sep = "\t",
+                  quote = FALSE, row.names = FALSE, col.names = TRUE)
+      message(sprintf("Wrote selected-normal log to %s", normal.logfile))
+    }, error = function(e) {
+      warning(sprintf("Could not write selected-normal log to %s: %s",
+                      normal.logfile, conditionMessage(e)))
+    })
+  }
+
+
   rcmat <- cbind(combined.pileup[,c("Chromosome", "Position", "Ref", "Alt","NOR.DP", "NOR.RD", "TUM.DP", "TUM.RD")],
             UMN.DP=c(combined.pileup[-x.idx, best_normAuto], combined.pileup[x.idx,best_normX]), UMNX.DP = combined.pileup[,best_normX])
   

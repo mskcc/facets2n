@@ -2,7 +2,8 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
                           perl.pileup=FALSE, MandUnormal=FALSE, spanT=0.2,
                           spanA=0.2, spanX=0.2, gbuild="hg19",
                           ReferencePileupFile=NULL, ReferenceLoessFile=NULL,
-                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE, donorCounts=FALSE) {
+                          MinOverlap=0.90, useMatchedX=FALSE, refX=FALSE, unmatched=FALSE, donorCounts=FALSE,
+                          normal.logfile=NULL) {
   #' Read in the snp-pileup generated SNP read count matrix file 
   #' @importFrom utils read.csv
   #' @param filename counts file from snp-pileup
@@ -22,6 +23,7 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
   #' @param useMatchedX (logical) Is the matched normal to be used for ChrX normalization?
   #' @param refX (logical) Use matched or reference normal for chrX normalization. excludes unmatched normals, such as pooled references, present in tumor counts matrix. 
   #' @param donorCounts (logical) is the counts matrix baseline donor sample(s)
+  #' @param normal.logfile (character) Optional filepath. When MandUnormal is TRUE, the normal selected for the autosomes and for ChrX is written to this file.
   #' @return A dataframe of pileup depth values for Tumor and Matched Normal if MandUnormal is FALSE. Else, a list of data frame with pileup depth values of Tumor, matched Normal, and a best unmatched normal, and the associated span values.
   #' @export
 
@@ -61,9 +63,10 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
           reference.loess,
           reference.pileup,
           MinOverlap,
-          useMatchedX, 
-          refX, 
-          unmatched
+          useMatchedX,
+          refX,
+          unmatched,
+          normal.logfile = normal.logfile
         )
       }
       else{
@@ -74,9 +77,10 @@ readSnpMatrix <- function(filename, skip=0L, err.thresh=Inf, del.thresh=Inf,
         reference.loess,
         reference.pileup,
         MinOverlap,
-        useMatchedX, 
-        refX, 
-        unmatched
+        useMatchedX,
+        refX,
+        unmatched,
+        normal.logfile = normal.logfile
         )
       }
       return(rcmat)
