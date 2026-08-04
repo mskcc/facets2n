@@ -209,6 +209,27 @@ findDiploidLogR <- function(out, cnlr) {
         #plot(ocnlevels0, dev1, pch=16, col=colr)
         #print(dev1)
         cn2logR <- ocnlevels0[which.min(dev1)]
+        # ocnlevels0 is empty when NO segment-cluster level falls in the search
+        # window (dipLogR[1]-1, dipLogR[1]) -- i.e. there is no candidate for a
+        # lower CN=2 level. sapply() over an empty vector gives an empty dev1,
+        # which.min() then returns integer(0), and cn2logR ends up zero-length.
+        # That is not caught here: it propagates to the `cn2logR < dipLogR[i]`
+        # tests below and dies with "argument is of length zero", or is returned
+        # as a zero-length dipLogR. Seen on near-flat genomes (>50% of the genome
+        # allelically balanced), where the level set is one dense pile at dipLogR
+        # and nothing sits below it.
+        #
+        # Fall back to the value the not1plus1 == FALSE branch assigns, i.e. treat
+        # dipLogR[1] as the diploid level. NOTE this is the conservative choice and
+        # may be wrong for this sample: not1plus1 was TRUE precisely because
+        # dipLogR[1] was suspected NOT to be the 1+1 level. The flag records that
+        # the CN=2 search found nothing, so a fit resting on this is reviewable.
+        # Placed BEFORE the wgd.likely block on purpose -- otherwise altDipLogR
+        # would be assigned the zero-length value and carry the bug forward.
+        if (length(cn2logR) == 0) {
+            flags <- c(flags, "no CN=2 level candidate below dipLogR; used dipLogR[1]")
+            cn2logR <- dipLogR[1]
+        }
         # if wgd.likely is non-null add dipLogR[1]
         if (!is.null(wgd.likely)) {
             # if wgd.likely set dipLogR[1] as altDipLogR
